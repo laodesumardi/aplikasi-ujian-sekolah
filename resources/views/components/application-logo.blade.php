@@ -1,34 +1,53 @@
 @php
     use App\Models\AppSetting;
     use Illuminate\Support\Facades\Storage;
-    use Illuminate\Support\Facades\URL;
 
     $logoPath = AppSetting::getValue('logo_path', null);
 
     // Generate HTTPS-safe URL for storage-based logo
     $logoUrl = null;
     if ($logoPath) {
-        $storageUrl = Storage::url($logoPath); // e.g. /storage/xyz.png
-        // Ensure absolute HTTPS URL to avoid mixed content on hosting
-        $logoUrl = secure_asset(ltrim($storageUrl, '/'));
+        // Check if file exists in storage
+        if (Storage::disk('public')->exists($logoPath)) {
+            // Build storage path: storage path is 'images/logo.png', public path is '/storage/images/logo.png'
+            $publicPath = 'storage/' . $logoPath;
+            
+            // Use secure_asset for HTTPS or asset for HTTP
+            // This ensures proper URL generation based on APP_URL in .env
+            if (request()->secure() || config('app.env') === 'production') {
+                $logoUrl = secure_asset($publicPath);
+            } else {
+                $logoUrl = asset($publicPath);
+            }
+        }
     }
 
     // Fallback to public files if no database logo
     if (!$logoUrl) {
         $candidates = [
-            public_path('images/logo.png'),
-            public_path('images/logo.jpg'),
-            public_path('images/logo.jpeg'),
-            public_path('images/logo.svg'),
-            public_path('logo.png'),
-            public_path('logo.svg'),
+            'images/logo.png',
+            'images/logo.jpg',
+            'images/logo.jpeg',
+            'images/logo.svg',
+            'logo.png',
+            'logo.svg',
         ];
         $logoFile = null;
         foreach ($candidates as $c) {
-            if (file_exists($c)) { $logoFile = $c; break; }
+            $fullPath = public_path($c);
+            if (file_exists($fullPath)) { 
+                $logoFile = $c; 
+                break; 
+            }
         }
-        // Use secure_asset to force HTTPS scheme in production
-        $logoUrl = $logoFile ? secure_asset(str_replace(public_path() . DIRECTORY_SEPARATOR, '', $logoFile)) : null;
+        // Use secure_asset for HTTPS or asset for HTTP
+        if ($logoFile) {
+            if (request()->secure() || config('app.env') === 'production') {
+                $logoUrl = secure_asset($logoFile);
+            } else {
+                $logoUrl = asset($logoFile);
+            }
+        }
     }
 @endphp
 
