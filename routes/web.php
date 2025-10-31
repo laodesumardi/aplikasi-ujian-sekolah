@@ -76,6 +76,7 @@ Route::middleware('auth')->prefix('guru')->name('guru.')->group(function () {
 
     Route::get('/hasil', [HasilController::class, 'index'])->name('results');
     Route::get('/hasil/{exam}', [HasilController::class, 'detail'])->name('results.detail');
+    Route::get('/hasil/{exam}/export', [HasilController::class, 'export'])->name('results.export');
     Route::delete('/hasil/{result}', [HasilController::class, 'delete'])->name('results.delete');
     Route::delete('/hasil/{exam}/all', [HasilController::class, 'deleteAll'])->name('results.delete-all');
 

@@ -1,5 +1,9 @@
 @extends('layouts.teacher')
 
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @section('breadcrumbs')
     <nav class="flex items-center gap-2">
         <a href="{{ route('guru.dashboard') }}" class="hover:underline">Guru</a>
@@ -22,6 +26,10 @@
             </div>
             <div class="flex items-center gap-2 flex-wrap">
                 @if($results->count() > 0)
+                <a href="{{ route('guru.results.export', $exam->id) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                    <span>Export Excel</span>
+                </a>
                 <form method="POST" action="{{ route('guru.results.delete-all', $exam->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus semua hasil ujian ini? Tindakan ini tidak dapat dibatalkan.');" class="inline">
                     @csrf
                     @method('DELETE')
@@ -128,7 +136,22 @@
                                         <span class="text-gray-600">{{ $rank }}</span>
                                     @endif
                                 </td>
-                                <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $result->student->name }}</td>
+                                <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-shrink-0">
+                                            @if($result->student->avatar && Storage::disk('public')->exists($result->student->avatar))
+                                                <img src="{{ Storage::url($result->student->avatar) }}" alt="{{ $result->student->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-gray-200">
+                                            @else
+                                                <div class="w-10 h-10 rounded-full bg-primary/10 border-2 border-gray-200 flex items-center justify-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6 text-primary">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <span class="text-sm font-medium text-gray-900">{{ $result->student->name }}</span>
+                                    </div>
+                                </td>
                                 <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="font-bold text-gray-900">{{ $result->score }}</span>
                                     <span class="text-gray-500 text-xs">/ {{ $result->total_points }}</span>

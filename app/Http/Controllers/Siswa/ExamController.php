@@ -362,6 +362,10 @@ class ExamController extends Controller
     {
         $user = Auth::user();
         
+        // Eager load relationships to avoid N+1 queries
+        $exam->load('subject', 'classRelation', 'questions');
+        
+        // Get exam result with proper relationships
         $examResult = ExamResult::where('exam_id', $exam->id)
             ->where('student_id', $user->id)
             ->first();
@@ -370,8 +374,46 @@ class ExamController extends Controller
             return redirect()->route('siswa.ujian-aktif')->with('error', 'Tidak ada data ujian.');
         }
         
+        // Ensure exam result belongs to the authenticated student
+        if ($examResult->student_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki izin untuk melihat hasil ujian ini.');
+        }
+        
         if ($examResult->status !== 'completed') {
-            return redirect()->route('siswa.exam', $exam->id);
+            return redirect()->route('siswa.exam', $exam->id)->with('info', 'Ujian belum selesai. Silakan selesaikan ujian terlebih dahulu.');
+        }
+        
+        // Ensure score and percentage are set (fallback if somehow missing)
+        if (is_null($examResult->score) || is_null($examResult->percentage) || $examResult->total_points == 0) {
+            // Recalculate if missing
+            $answers = $examResult->answers ?? [];
+            $score = 0;
+            $totalPoints = 0;
+            
+            // Load questions if not already loaded
+            if (!$exam->relationLoaded('questions')) {
+                $exam->load('questions');
+            }
+            
+            foreach ($exam->questions as $question) {
+                $totalPoints += $question->points ?? 1;
+                $studentAnswer = $answers[$question->id] ?? null;
+                
+                if ($studentAnswer && $question->correct_answer) {
+                    if ($question->question_type === 'pilihan_ganda') {
+                        if (trim(strtolower($studentAnswer)) === trim(strtolower($question->correct_answer))) {
+                            $score += $question->points ?? 1;
+                        }
+                    }
+                }
+            }
+            
+            $percentage = $totalPoints > 0 ? ($score / $totalPoints) * 100 : 0;
+            
+            $examResult->score = $score;
+            $examResult->total_points = $totalPoints;
+            $examResult->percentage = round($percentage, 2);
+            $examResult->save();
         }
         
         return view('student.exam_result', compact('exam', 'examResult'));

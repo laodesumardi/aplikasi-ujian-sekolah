@@ -1,6 +1,11 @@
+@php
+    use App\Models\AppSetting;
+    $appName = AppSetting::getValue('app_name', 'CBT Admin Sekolah');
+@endphp
+
 <x-guest-layout>
     <div class="mb-4 sm:mb-6 text-center">
-        <h1 class="text-xl sm:text-2xl font-semibold text-primary mb-1 sm:mb-2">Masuk ke CBT Sekolah</h1>
+        <h1 class="text-xl sm:text-2xl font-semibold text-primary mb-1 sm:mb-2">Masuk ke {{ $appName }}</h1>
         <p class="text-xs sm:text-sm text-gray-600 mt-1 px-2">Silakan login menggunakan akun yang telah diberikan.</p>
     </div>
 

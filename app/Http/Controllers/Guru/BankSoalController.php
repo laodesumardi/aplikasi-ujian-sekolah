@@ -425,7 +425,8 @@ class BankSoalController extends Controller
         
         // Set document properties
         $properties = $phpWord->getDocInfo();
-        $properties->setCreator('Aplikasi Ujian Sekolah');
+        $appName = \App\Models\AppSetting::getValue('app_name', 'Aplikasi Ujian Sekolah');
+        $properties->setCreator($appName);
         $properties->setTitle('Template Import Soal - Format DOC');
         $properties->setDescription('Template untuk import soal dalam format Microsoft Word (DOC/DOCX)');
         

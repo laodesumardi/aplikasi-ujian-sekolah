@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,9 @@ class ProfilController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('teacher.profile', compact('user'));
+        // Get classes for guru dropdown
+        $classes = Kelas::orderBy('level')->orderBy('name')->get();
+        return view('teacher.profile', compact('user', 'classes'));
     }
 
     public function update(Request $request)
@@ -26,6 +29,8 @@ class ProfilController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:2048'], // Max 2MB
             'remove_avatar' => ['nullable', 'boolean'],
+            'guru_kelas' => ['nullable', 'array'], // For guru: array of class IDs
+            'guru_kelas.*' => ['nullable', 'exists:classes,id'],
         ];
 
         // Add password validation if password is provided
@@ -39,6 +44,16 @@ class ProfilController extends Controller
         // Update basic info
         $user->name = $validated['name'];
         $user->email = $validated['email'];
+        
+        // Update kelas (for guru)
+        if (!empty($validated['guru_kelas'])) {
+            // Store class names as comma-separated string
+            $selectedClasses = Kelas::whereIn('id', $validated['guru_kelas'])->pluck('name')->toArray();
+            $user->kelas = implode(', ', $selectedClasses);
+        } elseif (isset($validated['guru_kelas']) && empty($validated['guru_kelas'])) {
+            // If empty array, clear kelas
+            $user->kelas = null;
+        }
 
         // Handle avatar upload
         if ($request->hasFile('avatar')) {

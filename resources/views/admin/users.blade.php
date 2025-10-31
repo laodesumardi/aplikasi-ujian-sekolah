@@ -1,5 +1,9 @@
 @extends('layouts.admin')
 
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @section('breadcrumbs')
     <nav class="flex items-center gap-2">
         <a href="{{ route('admin.dashboard') }}" class="hover:underline">Admin</a>
@@ -86,19 +90,38 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Foto</th>
                             <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">ID</th>
                             <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nama</th>
                             <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
                             <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Peran</th>
                             <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kelas</th>
+                            <th class="px-4 md:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tanggal Dibuat</th>
                             <th class="px-4 md:px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($users as $user)
                             <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                                    <div class="flex-shrink-0">
+                                        @if($user->avatar && Storage::disk('public')->exists($user->avatar))
+                                            <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
+                                        @else
+                                            <div class="w-12 h-12 rounded-full bg-primary/10 border-2 border-gray-200 flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6 text-primary">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $user->id }}</td>
-                                <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $user->name }}</td>
+                                <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-gray-900">{{ $user->name }}</span>
+                                    </div>
+                                </td>
                                 <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $user->email }}</td>
                                 <td class="px-4 md:px-6 py-4 whitespace-nowrap">
                                     @php
@@ -109,7 +132,18 @@
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
-                                <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $user->kelas ?? '-' }}</td>
+                                <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    @if($user->kelas)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                            {{ $user->kelas }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ $user->created_at ? $user->created_at->format('d/m/Y') : '-' }}
+                                </td>
                                 <td class="px-4 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end gap-2">
                                         <button onclick='openEditModal({{ $user->id }}, @json($user->name), @json($user->email), @json($user->role), @json($user->kelas ?? ""))' class="inline-flex items-center px-2 py-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors" title="Edit">
@@ -123,7 +157,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 md:px-6 py-12 text-center text-gray-500">
+                                <td colspan="8" class="px-4 md:px-6 py-12 text-center text-gray-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 110-8 4 4 0 010 8z"/>
                                     </svg>
@@ -172,16 +206,66 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Peran</label>
-                                <select name="role" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <select name="role" id="add_role" required onchange="toggleKelasFields('add')" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                     <option value="">Pilih Peran</option>
                                     <option value="admin">Admin</option>
                                     <option value="guru">Guru</option>
                                     <option value="siswa">Siswa</option>
                                 </select>
                             </div>
-                            <div>
+                            
+                            <!-- Kelas untuk Guru (Multi-select) -->
+                            <div id="add_guru_kelas_wrapper" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kelas yang Diampu <span class="text-red-500">*</span></label>
+                                <select name="guru_kelas[]" id="add_guru_kelas" multiple class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" style="min-height: 100px;">
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Tahan Ctrl/Cmd untuk memilih lebih dari satu kelas</p>
+                            </div>
+                            
+                            <!-- Kelas untuk Siswa (Tingkat + Sub-kelas) -->
+                            <div id="add_siswa_kelas_wrapper" class="hidden">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Kelas <span class="text-red-500">*</span></label>
+                                        <select name="siswa_tingkat" id="add_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                            <option value="">Pilih Tingkat</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                            <option value="11">11</option>
+                                            <option value="12">12</option>
+                                            <option value="X">X</option>
+                                            <option value="XI">XI</option>
+                                            <option value="XII">XII</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>
+                                        <select name="siswa_sub_kelas" id="add_siswa_sub_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                            <option value="">Pilih Sub-kelas</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Fallback: Input manual (untuk admin atau kasus khusus) -->
+                            <div id="add_kelas_manual_wrapper" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kelas (opsional)</label>
-                                <input type="text" name="kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <input type="text" name="kelas" id="add_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Contoh: X IPA A">
                             </div>
                         </div>
                     </div>
@@ -227,15 +311,65 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Peran</label>
-                                <select name="role" id="edit_role" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <select name="role" id="edit_role" required onchange="toggleKelasFields('edit')" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                     <option value="admin">Admin</option>
                                     <option value="guru">Guru</option>
                                     <option value="siswa">Siswa</option>
                                 </select>
                             </div>
-                            <div>
+                            
+                            <!-- Kelas untuk Guru (Multi-select) -->
+                            <div id="edit_guru_kelas_wrapper" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Kelas yang Diampu <span class="text-red-500">*</span></label>
+                                <select name="guru_kelas[]" id="edit_guru_kelas" multiple class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" style="min-height: 100px;">
+                                    @foreach($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Tahan Ctrl/Cmd untuk memilih lebih dari satu kelas</p>
+                            </div>
+                            
+                            <!-- Kelas untuk Siswa (Tingkat + Sub-kelas) -->
+                            <div id="edit_siswa_kelas_wrapper" class="hidden">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Kelas <span class="text-red-500">*</span></label>
+                                        <select name="siswa_tingkat" id="edit_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                            <option value="">Pilih Tingkat</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                            <option value="6">6</option>
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                            <option value="9">9</option>
+                                            <option value="10">10</option>
+                                            <option value="11">11</option>
+                                            <option value="12">12</option>
+                                            <option value="X">X</option>
+                                            <option value="XI">XI</option>
+                                            <option value="XII">XII</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>
+                                        <select name="siswa_sub_kelas" id="edit_siswa_sub_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                            <option value="">Pilih Sub-kelas</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Fallback: Input manual (untuk admin atau kasus khusus) -->
+                            <div id="edit_kelas_manual_wrapper" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kelas (opsional)</label>
-                                <input type="text" name="kelas" id="edit_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <input type="text" name="kelas" id="edit_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Contoh: X IPA A">
                             </div>
                         </div>
                     </div>
@@ -326,12 +460,86 @@
     </div>
 
     <script>
+        // Toggle kelas fields based on role
+        function toggleKelasFields(prefix) {
+            const role = document.getElementById(`${prefix}_role`).value;
+            
+            // Hide all kelas fields first
+            document.getElementById(`${prefix}_guru_kelas_wrapper`).classList.add('hidden');
+            document.getElementById(`${prefix}_siswa_kelas_wrapper`).classList.add('hidden');
+            document.getElementById(`${prefix}_kelas_manual_wrapper`).classList.add('hidden');
+            
+            // Reset all kelas fields
+            const guruKelas = document.getElementById(`${prefix}_guru_kelas`);
+            if (guruKelas) {
+                Array.from(guruKelas.options).forEach(option => option.selected = false);
+            }
+            
+            const siswaTingkat = document.getElementById(`${prefix}_siswa_tingkat`);
+            if (siswaTingkat) siswaTingkat.value = '';
+            
+            const siswaSubKelas = document.getElementById(`${prefix}_siswa_sub_kelas`);
+            if (siswaSubKelas) siswaSubKelas.value = '';
+            
+            const kelasManual = document.getElementById(`${prefix}_kelas`);
+            if (kelasManual) kelasManual.value = '';
+            
+            // Show appropriate field based on role
+            if (role === 'guru') {
+                document.getElementById(`${prefix}_guru_kelas_wrapper`).classList.remove('hidden');
+            } else if (role === 'siswa') {
+                document.getElementById(`${prefix}_siswa_kelas_wrapper`).classList.remove('hidden');
+            } else if (role === 'admin') {
+                document.getElementById(`${prefix}_kelas_manual_wrapper`).classList.remove('hidden');
+            }
+        }
+        
         // Add Modal
         function openAddModal() {
             document.getElementById('addModal').classList.remove('hidden');
+            // Reset form
+            document.getElementById('add_role').value = '';
+            toggleKelasFields('add');
         }
         function closeAddModal() {
             document.getElementById('addModal').classList.add('hidden');
+        }
+
+        // Populate kelas fields based on role and kelas value
+        function populateKelasFields(prefix, role, kelas) {
+            if (!kelas) return;
+            
+            if (role === 'guru') {
+                // Parse kelas string (comma-separated class names) to select class IDs
+                const classNames = kelas.split(',').map(c => c.trim());
+                const guruKelasSelect = document.getElementById(`${prefix}_guru_kelas`);
+                if (guruKelasSelect) {
+                    Array.from(guruKelasSelect.options).forEach(option => {
+                        if (classNames.includes(option.text.trim())) {
+                            option.selected = true;
+                        }
+                    });
+                }
+            } else if (role === 'siswa') {
+                // Parse kelas string (e.g., "X A", "XI B") to tingkat and sub_kelas
+                // Handle format: "X A", "XI B", "12 C", etc.
+                const parts = kelas.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    const tingkatSelect = document.getElementById(`${prefix}_siswa_tingkat`);
+                    const subKelasSelect = document.getElementById(`${prefix}_siswa_sub_kelas`);
+                    if (tingkatSelect) tingkatSelect.value = parts[0];
+                    // Get last part as sub_kelas (in case there are multiple spaces)
+                    if (subKelasSelect) subKelasSelect.value = parts[parts.length - 1];
+                } else if (parts.length === 1 && /^[A-D]$/i.test(parts[0])) {
+                    // Handle case where only sub_kelas is provided
+                    const subKelasSelect = document.getElementById(`${prefix}_siswa_sub_kelas`);
+                    if (subKelasSelect) subKelasSelect.value = parts[0].toUpperCase();
+                }
+            } else {
+                // Fallback to manual input
+                const kelasInput = document.getElementById(`${prefix}_kelas`);
+                if (kelasInput) kelasInput.value = kelas;
+            }
         }
 
         // Edit Modal
@@ -339,8 +547,14 @@
             document.getElementById('editForm').action = `{{ url('admin/users') }}/${id}`;
             document.getElementById('edit_name').value = name;
             document.getElementById('edit_email').value = email;
+            
+            // Set role and toggle fields
             document.getElementById('edit_role').value = role;
-            document.getElementById('edit_kelas').value = kelas || '';
+            toggleKelasFields('edit');
+            
+            // Populate kelas fields after toggle
+            populateKelasFields('edit', role, kelas);
+            
             document.getElementById('editModal').classList.remove('hidden');
         }
         function closeEditModal() {

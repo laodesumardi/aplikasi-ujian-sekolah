@@ -21,9 +21,13 @@
         <div class="mb-6 lg:mb-8">
             <div class="bg-gradient-to-r from-primary via-primary/95 to-primary/90 p-6 md:p-8 lg:p-10 text-white">
                 <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6">
+                    @php
+                        use App\Models\AppSetting;
+                        $appName = AppSetting::getValue('app_name', 'CBT Admin Sekolah');
+                    @endphp
                     <div class="flex-1">
                         <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 lg:mb-3 leading-tight">Selamat Datang, {{ Auth::user()->name }}!</h1>
-                        <p class="text-base md:text-lg lg:text-xl text-white/90 leading-relaxed">Berikut adalah ringkasan statistik dan aktivitas sistem CBT Sekolah.</p>
+                        <p class="text-base md:text-lg lg:text-xl text-white/90 leading-relaxed">Berikut adalah ringkasan statistik dan aktivitas sistem {{ $appName }}.</p>
                     </div>
                     <div class="hidden xl:block flex-shrink-0">
                         <div class="w-20 h-20 lg:w-24 lg:h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">

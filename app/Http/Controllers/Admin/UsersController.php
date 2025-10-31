@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -30,25 +31,53 @@ class UsersController extends Controller
 
         $users = $query->orderBy('created_at', 'desc')->paginate(10);
         
-        return view('admin.users', compact('users'));
+        // Get classes for guru dropdown
+        $classes = Kelas::orderBy('level')->orderBy('name')->get();
+        
+        return view('admin.users', compact('users', 'classes'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:admin,guru,siswa'],
             'kelas' => ['nullable', 'string', 'max:255'],
-        ]);
+        ];
+        
+        // Add conditional validation based on role
+        if ($request->role === 'guru') {
+            $rules['guru_kelas'] = ['required', 'array', 'min:1'];
+            $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
+        } elseif ($request->role === 'siswa') {
+            $rules['siswa_tingkat'] = ['required', 'string', 'in:1,2,3,4,5,6,7,8,9,10,11,12,X,XI,XII'];
+            $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D'];
+        }
+        
+        $validated = $request->validate($rules);
+
+        $kelasValue = null;
+        
+        if ($validated['role'] === 'guru' && !empty($validated['guru_kelas'])) {
+            // For guru: store class names as comma-separated string
+            $selectedClasses = Kelas::whereIn('id', $validated['guru_kelas'])->pluck('name')->toArray();
+            $kelasValue = implode(', ', $selectedClasses);
+        } elseif ($validated['role'] === 'siswa' && !empty($validated['siswa_tingkat']) && !empty($validated['siswa_sub_kelas'])) {
+            // For siswa: combine tingkat and sub_kelas (e.g., "X A", "XI B")
+            $kelasValue = $validated['siswa_tingkat'] . ' ' . $validated['siswa_sub_kelas'];
+        } elseif (!empty($validated['kelas'])) {
+            // Fallback to manual input
+            $kelasValue = $validated['kelas'];
+        }
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'kelas' => $validated['kelas'] ?? null,
+            'kelas' => $kelasValue,
         ]);
 
         return redirect()->route('admin.users')->with('success', 'Pengguna berhasil ditambahkan.');
@@ -56,19 +85,44 @@ class UsersController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:admin,guru,siswa'],
             'kelas' => ['nullable', 'string', 'max:255'],
-        ]);
+        ];
+        
+        // Add conditional validation based on role
+        if ($request->role === 'guru') {
+            $rules['guru_kelas'] = ['required', 'array', 'min:1'];
+            $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
+        } elseif ($request->role === 'siswa') {
+            $rules['siswa_tingkat'] = ['required', 'string', 'in:1,2,3,4,5,6,7,8,9,10,11,12,X,XI,XII'];
+            $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D'];
+        }
+        
+        $validated = $request->validate($rules);
+
+        $kelasValue = null;
+        
+        if ($validated['role'] === 'guru' && !empty($validated['guru_kelas'])) {
+            // For guru: store class names as comma-separated string
+            $selectedClasses = Kelas::whereIn('id', $validated['guru_kelas'])->pluck('name')->toArray();
+            $kelasValue = implode(', ', $selectedClasses);
+        } elseif ($validated['role'] === 'siswa' && !empty($validated['siswa_tingkat']) && !empty($validated['siswa_sub_kelas'])) {
+            // For siswa: combine tingkat and sub_kelas (e.g., "X A", "XI B")
+            $kelasValue = $validated['siswa_tingkat'] . ' ' . $validated['siswa_sub_kelas'];
+        } elseif (!empty($validated['kelas'])) {
+            // Fallback to manual input
+            $kelasValue = $validated['kelas'];
+        }
 
         $data = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
-            'kelas' => $validated['kelas'] ?? null,
+            'kelas' => $kelasValue,
         ];
 
         if ($request->filled('password')) {

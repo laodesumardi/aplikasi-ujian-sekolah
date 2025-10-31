@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamResult;
 use App\Models\Subject;
+use App\Exports\ExamResultsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class HasilController extends Controller
 {
@@ -159,5 +161,18 @@ class HasilController extends Controller
 
         return redirect()->route('guru.results.detail', $exam->id)
             ->with('success', 'Semua hasil ujian berhasil dihapus.');
+    }
+
+    public function export(Exam $exam)
+    {
+        // Verify the exam belongs to the logged-in teacher
+        if ($exam->created_by !== auth()->id()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $exam->load('subject', 'classRelation');
+        $filename = 'Hasil_Ujian_' . str_replace([' ', '/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $exam->title) . '_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new ExamResultsExport($exam), $filename);
     }
 }

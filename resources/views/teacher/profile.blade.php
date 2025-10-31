@@ -106,6 +106,31 @@
                         @enderror
                     </div>
 
+                    <!-- Kelas yang Diampu -->
+                    <div>
+                        <label for="guru_kelas" class="block text-sm font-medium text-gray-700 mb-1">Kelas yang Diampu</label>
+                        <select name="guru_kelas[]" id="guru_kelas" multiple class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 @error('guru_kelas') border-red-500 @enderror" style="min-height: 100px;">
+                            @foreach($classes as $class)
+                                <option value="{{ $class->id }}" 
+                                    @if($user->kelas)
+                                        @php
+                                            $userClasses = explode(',', $user->kelas);
+                                            $userClasses = array_map('trim', $userClasses);
+                                        @endphp
+                                        {{ in_array($class->name, $userClasses) ? 'selected' : '' }}
+                                    @endif
+                                >{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Tahan Ctrl/Cmd untuk memilih lebih dari satu kelas</p>
+                        @error('guru_kelas')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        @error('guru_kelas.*')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Divider -->
                     <div class="border-t border-gray-200 pt-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Ubah Password</h3>

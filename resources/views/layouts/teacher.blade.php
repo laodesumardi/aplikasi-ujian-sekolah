@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         @php
             use App\Models\AppSetting;
+            use Illuminate\Support\Facades\Storage;
             $appName = AppSetting::getValue('app_name', 'CBT Admin Sekolah');
         @endphp
         <title>{{ $appName }} - Guru</title>
@@ -28,14 +29,23 @@
                         </div>
                         <!-- User Info - Visible on all screens -->
                         @auth
-                            <div class="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-white/5 ml-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 md:w-4 md:h-4 text-white/80 flex-shrink-0">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
+                            @php
+                                $user = Auth::user();
+                            @endphp
+                            <a href="{{ route('guru.profile') }}" class="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 ml-auto transition-colors">
+                                @if($user->avatar && Storage::disk('public')->exists($user->avatar))
+                                    <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" class="w-6 h-6 md:w-7 md:h-7 rounded-full object-cover border-2 border-white/30 flex-shrink-0">
+                                @else
+                                    <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/30 flex-shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 md:w-4 md:h-4 text-white/90">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                    </div>
+                                @endif
                                 <span class="hidden sm:inline text-xs md:text-sm whitespace-nowrap">
-                                    <span class="hidden lg:inline">Nama: </span><strong class="font-semibold">{{ Str::limit(Auth::user()->name, 15) }}</strong>
+                                    <span class="hidden lg:inline">Nama: </span><strong class="font-semibold">{{ Str::limit($user->name, 15) }}</strong>
                                 </span>
-                            </div>
+                            </a>
                         @endauth
                     </div>
                     <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0 w-full sm:w-auto">
