@@ -16,7 +16,9 @@ class UjianController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Exam::with('subject', 'classRelation', 'creator');
+        // Get exams created by the logged-in teacher
+        $query = Exam::with('subject', 'classRelation', 'creator')
+            ->where('created_by', Auth::id());
 
         // Filter by subject
         if ($request->has('subject') && $request->subject !== 'all' && $request->subject) {
@@ -122,6 +124,11 @@ class UjianController extends Controller
 
     public function update(Request $request, Exam $exam)
     {
+        // Ensure the exam belongs to the logged-in teacher
+        if ($exam->created_by !== Auth::id()) {
+            return redirect()->route('guru.exams')->with('error', 'Anda tidak memiliki izin untuk mengedit ujian ini.');
+        }
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'subject_id' => ['required', 'exists:subjects,id'],
@@ -194,6 +201,11 @@ class UjianController extends Controller
 
     public function destroy(Exam $exam)
     {
+        // Ensure the exam belongs to the logged-in teacher
+        if ($exam->created_by !== Auth::id()) {
+            return redirect()->route('guru.exams')->with('error', 'Anda tidak memiliki izin untuk menghapus ujian ini.');
+        }
+
         $exam->questions()->detach();
         $exam->delete();
 
