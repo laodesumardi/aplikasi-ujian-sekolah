@@ -1,9 +1,19 @@
 @php
     use App\Models\AppSetting;
+    use Illuminate\Support\Facades\Storage;
+    use Illuminate\Support\Facades\URL;
+
     $logoPath = AppSetting::getValue('logo_path', null);
-    $logoUrl = $logoPath ? \Storage::url($logoPath) : null;
-    
-    // Fallback to old logo files if no database logo
+
+    // Generate HTTPS-safe URL for storage-based logo
+    $logoUrl = null;
+    if ($logoPath) {
+        $storageUrl = Storage::url($logoPath); // e.g. /storage/xyz.png
+        // Ensure absolute HTTPS URL to avoid mixed content on hosting
+        $logoUrl = secure_asset(ltrim($storageUrl, '/'));
+    }
+
+    // Fallback to public files if no database logo
     if (!$logoUrl) {
         $candidates = [
             public_path('images/logo.png'),
@@ -17,7 +27,8 @@
         foreach ($candidates as $c) {
             if (file_exists($c)) { $logoFile = $c; break; }
         }
-        $logoUrl = $logoFile ? asset(str_replace(public_path() . DIRECTORY_SEPARATOR, '', $logoFile)) : null;
+        // Use secure_asset to force HTTPS scheme in production
+        $logoUrl = $logoFile ? secure_asset(str_replace(public_path() . DIRECTORY_SEPARATOR, '', $logoFile)) : null;
     }
 @endphp
 
