@@ -9,8 +9,9 @@
     if ($logoPath) {
         // Check if file exists in storage
         if (Storage::disk('public')->exists($logoPath)) {
-            // Build storage path: storage path is 'images/logo.png', public path is '/storage/images/logo.png'
-            $publicPath = 'storage/' . $logoPath;
+            // Use Storage::url to get the correct public URL (e.g., '/storage/images/logo.png')
+            $storageUrl = Storage::url($logoPath);
+            $publicPath = ltrim($storageUrl, '/');
             
             // Use secure_asset for HTTPS or asset for HTTP
             // This ensures proper URL generation based on APP_URL in .env

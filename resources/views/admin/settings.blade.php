@@ -58,7 +58,13 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div class="flex-shrink-0">
                             @if($logoPath)
-                                <img src="{{ Storage::url($logoPath) }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50">
+                                @php
+                                    $publicLogoUrl = ltrim(Storage::url($logoPath), '/');
+                                    $secureLogoUrl = (request()->secure() || config('app.env') === 'production')
+                                        ? secure_asset($publicLogoUrl)
+                                        : asset($publicLogoUrl);
+                                @endphp
+                                <img src="{{ $secureLogoUrl }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50">
                             @else
                                 <div class="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50" id="logoPreview">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
