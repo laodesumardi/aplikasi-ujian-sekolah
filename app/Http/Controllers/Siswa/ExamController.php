@@ -68,8 +68,7 @@ class ExamController extends Controller
             if (Carbon::now()->gte($endTime)) {
                 // Auto-submit the exam
                 $this->autoSubmit($exam, $examResult);
-                return redirect()->route('siswa.ujian-aktif')
-                    ->with('info', 'Waktu ujian telah habis. Ujian otomatis diselesaikan.');
+                return redirect()->route('siswa.exam.result', $exam->id);
             }
         }
         
@@ -310,8 +309,7 @@ class ExamController extends Controller
             if (Carbon::now()->gte($endTime)) {
                 // Time has expired, auto-submit
                 $this->autoSubmit($exam, $examResult);
-                return redirect()->route('siswa.riwayat')
-                    ->with('info', 'Waktu ujian telah habis. Ujian otomatis diselesaikan. Nilai Anda: ' . round($examResult->percentage, 2) . '%');
+                return redirect()->route('siswa.exam.result', $exam->id);
             }
         }
         
@@ -357,7 +355,26 @@ class ExamController extends Controller
         $examResult->time_taken = $timeTaken;
         $examResult->save();
         
-        return redirect()->route('siswa.riwayat')->with('success', 'Ujian berhasil diselesaikan. Nilai Anda: ' . round($percentage, 2) . '%');
+        return redirect()->route('siswa.exam.result', $exam->id);
+    }
+
+    public function result(Exam $exam)
+    {
+        $user = Auth::user();
+        
+        $examResult = ExamResult::where('exam_id', $exam->id)
+            ->where('student_id', $user->id)
+            ->first();
+        
+        if (!$examResult) {
+            return redirect()->route('siswa.ujian-aktif')->with('error', 'Tidak ada data ujian.');
+        }
+        
+        if ($examResult->status !== 'completed') {
+            return redirect()->route('siswa.exam', $exam->id);
+        }
+        
+        return view('student.exam_result', compact('exam', 'examResult'));
     }
 }
 

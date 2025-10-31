@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/siswa/ujian/{exam}', [SiswaExamController::class, 'show'])->name('siswa.exam');
     Route::post('/siswa/ujian/{exam}/save-answer', [SiswaExamController::class, 'saveAnswer'])->name('siswa.exam.save-answer');
     Route::post('/siswa/ujian/{exam}/submit', [SiswaExamController::class, 'submit'])->name('siswa.exam.submit');
+    Route::get('/siswa/ujian/{exam}/result', [SiswaExamController::class, 'result'])->name('siswa.exam.result');
 
     Route::get('/siswa/riwayat', [SiswaDashboardController::class, 'riwayat'])->name('siswa.riwayat');
     Route::get('/siswa/profil', [SiswaDashboardController::class, 'profil'])->name('siswa.profil');
