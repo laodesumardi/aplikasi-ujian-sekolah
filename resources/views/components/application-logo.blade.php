@@ -4,20 +4,32 @@
 
     $logoPath = AppSetting::getValue('logo_path', null);
 
-    // Generate HTTPS-safe URL for public-based logo (no symlink)
+    // Generate HTTPS-safe URL for logo
     $logoUrl = null;
     if ($logoPath) {
+        // First, check if file exists in public folder (new method: public/uploads/logo.png)
         $publicFile = public_path($logoPath);
         if ($publicFile && file_exists($publicFile)) {
+            // File exists in public folder
             if (request()->secure() || config('app.env') === 'production') {
                 $logoUrl = secure_asset($logoPath);
             } else {
                 $logoUrl = asset($logoPath);
             }
+        } 
+        // Fallback: check if file exists in storage (legacy method: images/logo.png in storage/app/public)
+        elseif (Storage::disk('public')->exists($logoPath)) {
+            // File exists in storage, use storage URL
+            $storagePath = 'storage/' . $logoPath;
+            if (request()->secure() || config('app.env') === 'production') {
+                $logoUrl = secure_asset($storagePath);
+            } else {
+                $logoUrl = asset($storagePath);
+            }
         }
     }
 
-    // Fallback to public files if no database logo
+    // Fallback to default logo files if no database logo found
     if (!$logoUrl) {
         $candidates = [
             'images/logo.png',
