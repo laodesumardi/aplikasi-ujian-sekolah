@@ -6,15 +6,28 @@
     // Generate HTTPS-safe URL for logo
     $logoUrl = null;
     if ($logoPath) {
-        // First, check if file exists in public folder (new method: public/uploads/logo.png)
-        $publicFile = public_path($logoPath);
+        // Normalize path
+        $normalizedPath = ltrim($logoPath, '/');
+        $publicFile = public_path($normalizedPath);
+        
+        // Check if file exists in public folder
         if ($publicFile && file_exists($publicFile)) {
-            // File exists in public folder
-            if (request()->secure() || config('app.env') === 'production') {
-                $logoUrl = secure_asset($logoPath);
-            } else {
-                $logoUrl = asset($logoPath);
+            // Build absolute URL for production
+            $baseUrl = rtrim(config('app.url'), '/');
+            $isProduction = config('app.env') === 'production';
+            $isSecure = request()->secure() || $isProduction;
+            
+            // Force HTTPS in production
+            if ($isSecure && strpos($baseUrl, 'http://') === 0) {
+                $baseUrl = str_replace('http://', 'https://', $baseUrl);
             }
+            
+            // Build absolute URL
+            $relativePath = ltrim($normalizedPath, '/');
+            $logoUrl = $baseUrl . '/' . $relativePath;
+            
+            // Add cache busting
+            $logoUrl .= '?v=' . filemtime($publicFile);
         }
     }
 

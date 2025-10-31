@@ -59,26 +59,53 @@
                         <div class="flex-shrink-0">
                             @php
                                 $logoUrl = null;
+                                $debugInfo = [];
+                                
                                 if ($logoPath) {
-                                    // Check if file exists in public path (new method: public/uploads/logo.png)
-                                    $publicFile = public_path($logoPath);
+                                    // Normalize path
+                                    $normalizedPath = ltrim($logoPath, '/');
+                                    $publicFile = public_path($normalizedPath);
                                     $fileExists = ($publicFile && file_exists($publicFile));
                                     
+                                    $debugInfo[] = "Path: " . $logoPath;
+                                    $debugInfo[] = "Normalized: " . $normalizedPath;
+                                    $debugInfo[] = "Full Path: " . $publicFile;
+                                    $debugInfo[] = "Exists: " . ($fileExists ? 'Yes' : 'No');
+                                    
                                     if ($fileExists) {
-                                        // Public path (new method) - add cache busting with filemtime
-                                        $cacheBuster = $fileExists ? '?v=' . filemtime($publicFile) : '';
-                                        if (request()->secure() || config('app.env') === 'production') {
-                                            $logoUrl = secure_asset($logoPath) . $cacheBuster;
-                                        } else {
-                                            $logoUrl = asset($logoPath) . $cacheBuster;
+                                        // Build URL - always use absolute URL for production
+                                        $baseUrl = rtrim(config('app.url'), '/');
+                                        $isProduction = config('app.env') === 'production';
+                                        $isSecure = request()->secure() || $isProduction;
+                                        
+                                        // Force HTTPS in production
+                                        if ($isSecure && strpos($baseUrl, 'http://') === 0) {
+                                            $baseUrl = str_replace('http://', 'https://', $baseUrl);
                                         }
+                                        
+                                        // Build absolute URL
+                                        $relativePath = ltrim($normalizedPath, '/');
+                                        $logoUrl = $baseUrl . '/' . $relativePath;
+                                        
+                                        // Add cache busting
+                                        $cacheBuster = '?v=' . filemtime($publicFile);
+                                        $logoUrl .= $cacheBuster;
+                                        
+                                        $debugInfo[] = "URL: " . $logoUrl;
+                                    } else {
+                                        $debugInfo[] = "ERROR: File tidak ditemukan!";
                                     }
+                                } else {
+                                    $debugInfo[] = "Path kosong/null";
                                 }
                             @endphp
                             @if($logoUrl)
-                                <img src="{{ $logoUrl }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                <div style="display:none;" class="w-32 h-32 border-2 border-dashed border-red-300 rounded-lg flex items-center justify-center bg-red-50">
-                                    <p class="text-xs text-red-600 text-center px-2">Gambar tidak dapat dimuat</p>
+                                <img src="{{ $logoUrl }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50" 
+                                     onerror="console.error('Logo load error:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                     onload="console.log('Logo loaded successfully:', this.src);">
+                                <div style="display:none;" class="w-32 h-32 border-2 border-dashed border-red-300 rounded-lg flex flex-col items-center justify-center bg-red-50 p-2">
+                                    <p class="text-xs text-red-600 text-center font-medium mb-1">Gambar tidak dapat dimuat</p>
+                                    <p class="text-xs text-red-500 text-center break-all">{{ $logoUrl ?? 'URL tidak tersedia' }}</p>
                                 </div>
                             @else
                                 <div class="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50" id="logoPreview">
@@ -95,6 +122,22 @@
                                 <div class="mt-2 space-y-1">
                                     <button type="button" onclick="removeLogo()" class="text-sm text-red-600 hover:text-red-800">Hapus Logo Saat Ini</button>
                                     <p class="text-xs text-gray-400">Path: {{ $logoPath }}</p>
+                                    @if(config('app.debug') && !empty($debugInfo))
+                                        <details class="mt-2">
+                                            <summary class="text-xs text-gray-500 cursor-pointer">Debug Info</summary>
+                                            <div class="mt-1 p-2 bg-gray-100 rounded text-xs text-gray-600 font-mono">
+                                                @foreach($debugInfo as $info)
+                                                    <div>{{ $info }}</div>
+                                                @endforeach
+                                                @if($logoUrl)
+                                                    <div class="mt-2 pt-2 border-t">
+                                                        <strong>Final URL:</strong><br>
+                                                        <a href="{{ $logoUrl }}" target="_blank" class="text-blue-600 break-all">{{ $logoUrl }}</a>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </details>
+                                    @endif
                                 </div>
                             @endif
                         </div>
