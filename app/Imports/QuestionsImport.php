@@ -63,29 +63,81 @@ class QuestionsImport implements ToModel, WithHeadingRow, WithValidation, SkipsO
         // Prepare options for multiple choice
         $options = null;
         if ($questionType === 'pilihan_ganda') {
-            // Get raw option values
-            $optionA = trim($normalized['opsia'] ?? $normalized['optiona'] ?? $normalized['a'] ?? '');
-            $optionB = trim($normalized['opsib'] ?? $normalized['optionb'] ?? $normalized['b'] ?? '');
-            $optionC = trim($normalized['opsic'] ?? $normalized['optionc'] ?? $normalized['c'] ?? '');
-            $optionD = trim($normalized['opsid'] ?? $normalized['optiond'] ?? $normalized['d'] ?? '');
+            // Get raw option values - try multiple possible column names
+            // Handle case-insensitive and various formats (opsi a, opsi_a, opsi-a, opsia, optiona, a)
+            $optionA = '';
+            $optionB = '';
+            $optionC = '';
+            $optionD = '';
+            
+            // Try all possible column name variations for each option
+            $possibleKeysA = ['opsia', 'optiona', 'a', 'opsia', 'opsi a', 'opsi_a', 'opsi-a', 'jawabana'];
+            $possibleKeysB = ['opsib', 'optionb', 'b', 'opsib', 'opsi b', 'opsi_b', 'opsi-b', 'jawabanb'];
+            $possibleKeysC = ['opsic', 'optionc', 'c', 'opsic', 'opsi c', 'opsi_c', 'opsi-c', 'jawabanc'];
+            $possibleKeysD = ['opsid', 'optiond', 'd', 'opsid', 'opsi d', 'opsi_d', 'opsi-d', 'jawaband'];
+            
+            foreach ($possibleKeysA as $key) {
+                if (isset($normalized[$key]) && empty($optionA)) {
+                    $val = $normalized[$key];
+                    $optionA = is_null($val) ? '' : trim((string)$val);
+                }
+            }
+            
+            foreach ($possibleKeysB as $key) {
+                if (isset($normalized[$key]) && empty($optionB)) {
+                    $val = $normalized[$key];
+                    $optionB = is_null($val) ? '' : trim((string)$val);
+                }
+            }
+            
+            foreach ($possibleKeysC as $key) {
+                if (isset($normalized[$key]) && empty($optionC)) {
+                    $val = $normalized[$key];
+                    $optionC = is_null($val) ? '' : trim((string)$val);
+                }
+            }
+            
+            foreach ($possibleKeysD as $key) {
+                if (isset($normalized[$key]) && empty($optionD)) {
+                    $val = $normalized[$key];
+                    $optionD = is_null($val) ? '' : trim((string)$val);
+                }
+            }
+            
+            // Debug: Log what we found
+            \Log::debug('Import options - Found values:', [
+                'A' => $optionA,
+                'B' => $optionB,
+                'C' => $optionC,
+                'D' => $optionD,
+                'available_keys' => array_keys($normalized)
+            ]);
             
             // Check if option A contains concatenated options (like "DeforestasiB. ReboisasiC. IndustrialisasiD. Urbanisasi")
             // If option A has content but B, C, D are empty, try to parse option A as concatenated string
             if (!empty($optionA) && empty($optionB) && empty($optionC) && empty($optionD)) {
-                // Try to parse concatenated string
-                $pattern = '/([A-F])\s*[\.\)\:\-]?\s*([^A-F]+?)(?=\s*[A-F]\s*[\.\)\:\-]?|$)/i';
+                // Try to parse concatenated string (limit to A-D only)
+                $pattern = '/([A-D])\s*[\.\)\:\-]?\s*([^A-E]+?)(?=\s*[A-D]\s*[\.\)\:\-]?|$)/iu';
                 if (preg_match_all($pattern, $optionA, $matches, PREG_SET_ORDER)) {
                     $parsedOptions = [];
                     foreach ($matches as $match) {
                         $key = strtoupper(trim($match[1]));
                         $value = trim($match[2]);
-                        if (!empty($value)) {
+                        // Only process A, B, C, D
+                        if (!empty($value) && in_array($key, ['A', 'B', 'C', 'D']) && !isset($parsedOptions[$key])) {
                             $parsedOptions[$key] = $value;
                         }
                     }
-                    // If we successfully parsed multiple options, use them
+                    // If we successfully parsed multiple options (at least 2), use them
                     if (count($parsedOptions) >= 2) {
+                        // Ensure all A-D keys exist
+                        foreach (['A', 'B', 'C', 'D'] as $key) {
+                            if (!isset($parsedOptions[$key])) {
+                                $parsedOptions[$key] = '';
+                            }
+                        }
                         $options = $parsedOptions;
+                        \Log::debug('Import options - Parsed from concatenated string:', $options);
                     } else {
                         // Otherwise, use original values
                         $options = [
@@ -106,8 +158,7 @@ class QuestionsImport implements ToModel, WithHeadingRow, WithValidation, SkipsO
                 }
             } else {
                 // Normal case: each option in separate column
-                // But check each option for concatenated values
-                $options = [];
+                // Store all original values first
                 $allOptions = [
                     'A' => $optionA,
                     'B' => $optionB,
@@ -115,25 +166,56 @@ class QuestionsImport implements ToModel, WithHeadingRow, WithValidation, SkipsO
                     'D' => $optionD,
                 ];
                 
+                // Initialize options array
+                $options = [];
+                
+                // First pass: check each option for concatenated values and parse them
                 foreach ($allOptions as $key => $value) {
                     if (!empty($value)) {
-                        // Check if this value contains concatenated options
-                        $pattern = '/([A-F])\s*[\.\)\:\-]?\s*([^A-F]+?)(?=\s*[A-F]\s*[\.\)\:\-]?|$)/i';
+                        // Check if this value contains concatenated options (limit to A-D only)
+                        $pattern = '/([A-D])\s*[\.\)\:\-]?\s*([^A-E]+?)(?=\s*[A-D]\s*[\.\)\:\-]?|$)/iu';
                         if (preg_match_all($pattern, $value, $matches, PREG_SET_ORDER) && count($matches) > 1) {
-                            // This value contains multiple options, parse them
+                            // This value contains multiple options, parse them all
                             foreach ($matches as $match) {
                                 $optKey = strtoupper(trim($match[1]));
                                 $optValue = trim($match[2]);
-                                if (!empty($optValue) && !isset($options[$optKey])) {
+                                // Only process A, B, C, D and ensure we don't overwrite existing values
+                                if (!empty($optValue) && in_array($optKey, ['A', 'B', 'C', 'D']) && !isset($options[$optKey])) {
                                     $options[$optKey] = $optValue;
                                 }
                             }
                         } else {
-                            // Single option value
-                            $options[$key] = $value;
+                            // Single option value - always assign to the column's key (A, B, C, or D)
+                            // Even if it looks empty, preserve the original value
+                            if (!isset($options[$key]) || empty($options[$key])) {
+                                $options[$key] = $value;
+                            }
                         }
                     }
                 }
+                
+                // Second pass: assign original values to their column keys if not yet set
+                // This ensures we don't lose options that weren't parsed from concatenated strings
+                foreach ($allOptions as $key => $originalValue) {
+                    if (!isset($options[$key]) || (empty($options[$key]) && !empty($originalValue))) {
+                        // If this key is not set or empty, but original value exists, use it
+                        $options[$key] = $originalValue;
+                    }
+                }
+                
+                // Third pass: ensure all A-D keys exist (even if empty)
+                // This ensures we always have A, B, C, D structure
+                foreach (['A', 'B', 'C', 'D'] as $key) {
+                    if (!isset($options[$key])) {
+                        $options[$key] = '';
+                    } else {
+                        // Trim the value
+                        $options[$key] = trim((string)$options[$key]);
+                    }
+                }
+                
+                // Debug: Log final options
+                \Log::debug('Import options - Final parsed:', $options);
             }
             
             // Validate options - at least one should be filled

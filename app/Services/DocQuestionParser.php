@@ -101,18 +101,23 @@ class DocQuestionParser
                 
                 if ($currentQuestion) {
                     // If optionText contains concatenated options (like "DeforestasiB. ReboisasiC. IndustrialisasiD. Urbanisasi")
-                    $pattern = '/([ABCD])\s*[\.\)\:\-]?\s*([^ABCD]+?)(?=\s*[ABCD]\s*[\.\)\:\-]?\s*|$)/iu';
+                    $pattern = '/([A-D])\s*[\.\)\:\-]?\s*([^A-E]+?)(?=\s*[A-D]\s*[\.\)\:\-]?\s*|$)/iu';
                     if (preg_match_all($pattern, $optionText, $optionMatches, PREG_SET_ORDER) && count($optionMatches) > 1) {
                         // Parse all concatenated options
                         foreach ($optionMatches as $match) {
                             $optKey = strtoupper(trim($match[1]));
                             $optValue = trim($match[2]);
-                            if (!empty($optValue)) {
+                            // Only process A, B, C, D and don't overwrite existing values
+                            if (!empty($optValue) && in_array($optKey, ['A', 'B', 'C', 'D']) && !isset($currentQuestion['options'][$optKey])) {
                                 $currentQuestion['options'][$optKey] = $optValue;
                             }
                         }
+                        // Ensure the original option letter is also set if not already parsed
+                        if (!isset($currentQuestion['options'][$optionLetter])) {
+                            $currentQuestion['options'][$optionLetter] = $optionText;
+                        }
                     } else {
-                        // Single option
+                        // Single option - always set it
                         $currentQuestion['options'][$optionLetter] = $optionText;
                     }
                     $collectingOptions = true;
