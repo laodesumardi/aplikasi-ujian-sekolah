@@ -58,22 +58,39 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div class="flex-shrink-0">
                             @php
+                                use Illuminate\Support\Facades\Storage;
                                 $logoUrl = null;
                                 if ($logoPath) {
-                                    // Check if file exists in public path
+                                    // Check if file exists in public path (new method: public/uploads/logo.png)
                                     $publicFile = public_path($logoPath);
-                                    if ($publicFile && file_exists($publicFile)) {
-                                        // Use secure_asset for HTTPS or asset for HTTP
+                                    $fileExists = ($publicFile && file_exists($publicFile));
+                                    
+                                    if ($fileExists) {
+                                        // Public path (new method) - add cache busting with filemtime
+                                        $cacheBuster = $fileExists ? '?v=' . filemtime($publicFile) : '';
                                         if (request()->secure() || config('app.env') === 'production') {
-                                            $logoUrl = secure_asset($logoPath);
+                                            $logoUrl = secure_asset($logoPath) . $cacheBuster;
                                         } else {
-                                            $logoUrl = asset($logoPath);
+                                            $logoUrl = asset($logoPath) . $cacheBuster;
+                                        }
+                                    } 
+                                    // Fallback: check if file exists in storage (legacy method)
+                                    elseif (Storage::disk('public')->exists($logoPath)) {
+                                        // Legacy storage path
+                                        $storagePath = 'storage/' . $logoPath;
+                                        if (request()->secure() || config('app.env') === 'production') {
+                                            $logoUrl = secure_asset($storagePath);
+                                        } else {
+                                            $logoUrl = asset($storagePath);
                                         }
                                     }
                                 }
                             @endphp
                             @if($logoUrl)
-                                <img src="{{ $logoUrl }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50">
+                                <img src="{{ $logoUrl }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display:none;" class="w-32 h-32 border-2 border-dashed border-red-300 rounded-lg flex items-center justify-center bg-red-50">
+                                    <p class="text-xs text-red-600 text-center px-2">Gambar tidak dapat dimuat</p>
+                                </div>
                             @else
                                 <div class="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50" id="logoPreview">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -86,7 +103,10 @@
                             <input type="file" name="logo" id="logoInput" accept="image/jpeg,image/jpg,image/png,image/svg+xml" class="block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" onchange="previewLogo(this)">
                             <p class="text-xs text-gray-500 mt-2">Format: PNG, JPG, SVG. Maks 2MB.</p>
                             @if($logoPath)
-                                <button type="button" onclick="removeLogo()" class="mt-2 text-sm text-red-600 hover:text-red-800">Hapus Logo Saat Ini</button>
+                                <div class="mt-2 space-y-1">
+                                    <button type="button" onclick="removeLogo()" class="text-sm text-red-600 hover:text-red-800">Hapus Logo Saat Ini</button>
+                                    <p class="text-xs text-gray-400">Path: {{ $logoPath }}</p>
+                                </div>
                             @endif
                         </div>
                     </div>

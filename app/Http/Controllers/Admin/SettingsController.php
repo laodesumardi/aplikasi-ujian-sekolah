@@ -36,34 +36,50 @@ class SettingsController extends Controller
 
         // Handle logo upload (store in public/uploads, no symlink)
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists (support legacy storage and new public path)
-            $oldLogoPath = AppSetting::getValue('logo_path');
-            if ($oldLogoPath) {
-                // Delete from public if exists
-                $publicOld = public_path($oldLogoPath);
-                if ($publicOld && file_exists($publicOld)) {
-                    @unlink($publicOld);
+            try {
+                // Delete old logo if exists (support legacy storage and new public path)
+                $oldLogoPath = AppSetting::getValue('logo_path');
+                if ($oldLogoPath) {
+                    // Delete from public if exists
+                    $publicOld = public_path($oldLogoPath);
+                    if ($publicOld && file_exists($publicOld)) {
+                        @unlink($publicOld);
+                    }
+                    // Delete from storage (legacy)
+                    if (Storage::disk('public')->exists($oldLogoPath)) {
+                        Storage::disk('public')->delete($oldLogoPath);
+                    }
                 }
-                // Delete from storage (legacy)
-                if (Storage::disk('public')->exists($oldLogoPath)) {
-                    Storage::disk('public')->delete($oldLogoPath);
+
+                // Ensure uploads directory exists
+                $uploadsDir = public_path('uploads');
+                if (!is_dir($uploadsDir)) {
+                    if (!@mkdir($uploadsDir, 0755, true)) {
+                        return redirect()->route('admin.settings')->with('error', 'Gagal membuat folder uploads. Pastikan folder public memiliki permission yang benar.');
+                    }
                 }
+
+                // Store new logo into public/uploads
+                $logoFile = $request->file('logo');
+                $extension = strtolower($logoFile->getClientOriginalExtension());
+                $logoName = 'logo.' . $extension;
+                $destinationPath = $uploadsDir . DIRECTORY_SEPARATOR . $logoName;
+                
+                // Move file
+                if (!$logoFile->move($uploadsDir, $logoName)) {
+                    return redirect()->route('admin.settings')->with('error', 'Gagal menyimpan file logo. Pastikan folder uploads memiliki permission write.');
+                }
+
+                // Verify file was saved
+                if (!file_exists($destinationPath)) {
+                    return redirect()->route('admin.settings')->with('error', 'File logo gagal disimpan.');
+                }
+
+                $logoPath = 'uploads/' . $logoName;
+                AppSetting::setValue('logo_path', $logoPath);
+            } catch (\Exception $e) {
+                return redirect()->route('admin.settings')->with('error', 'Terjadi kesalahan saat mengunggah logo: ' . $e->getMessage());
             }
-
-            // Ensure uploads directory exists
-            $uploadsDir = public_path('uploads');
-            if (!is_dir($uploadsDir)) {
-                @mkdir($uploadsDir, 0755, true);
-            }
-
-            // Store new logo into public/uploads
-            $logoFile = $request->file('logo');
-            $extension = $logoFile->getClientOriginalExtension();
-            $logoName = 'logo.' . $extension;
-            $logoFile->move($uploadsDir, $logoName);
-
-            $logoPath = 'uploads/' . $logoName;
-            AppSetting::setValue('logo_path', $logoPath);
         }
 
         // Update other settings
