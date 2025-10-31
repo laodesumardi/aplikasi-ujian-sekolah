@@ -16,18 +16,18 @@
             <div class="w-full max-w-screen-2xl mx-auto">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5 md:py-3 lg:py-4 min-h-[56px] sm:min-h-[60px] md:min-h-[64px] gap-2 sm:gap-0">
                     <div class="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0 w-full sm:w-auto">
-                        <!-- Mobile: Sidebar Toggle -->
+                    <!-- Mobile: Sidebar Toggle -->
                         <button id="sidebarToggle" aria-label="Buka menu" class="inline-flex items-center justify-center md:hidden rounded-md p-1.5 sm:p-2 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 transition-colors flex-shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
                         <!-- Page Title -->
                         <div class="flex items-center gap-2 flex-1 min-w-0">
                             <h1 class="font-semibold text-sm sm:text-base md:text-lg lg:text-xl truncate">Dashboard Admin</h1>
                         </div>
                         <!-- User Info - Visible on all screens -->
-                        @auth
+                    @auth
                             <div class="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-white/5 ml-auto">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 md:w-4 md:h-4 text-white/80 flex-shrink-0">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -36,7 +36,7 @@
                                     <span class="hidden lg:inline">Nama: </span><strong class="font-semibold">{{ Str::limit(Auth::user()->name, 15) }}</strong>
                                 </span>
                             </div>
-                        @endauth
+                    @endauth
                     </div>
                     <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0 w-full sm:w-auto">
                         <!-- Quick Search - Visible on all screens -->

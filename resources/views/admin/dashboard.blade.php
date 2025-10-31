@@ -55,7 +55,7 @@
                     </div>
                 </div>
 
-                <!-- Total Soal -->
+            <!-- Total Soal -->
                 <div class="bg-gradient-to-br from-primary/10 via-primary/5 to-white rounded-xl lg:rounded-2xl shadow-lg p-5 md:p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group">
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div class="flex-1 min-w-0">
@@ -179,7 +179,7 @@
                 
                 <div class="mb-4 md:mb-6 p-4 md:p-5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg md:rounded-xl">
                     <div class="flex items-center justify-between">
-                        <div>
+                    <div>
                             <p class="text-xs text-primary font-semibold mb-1 uppercase tracking-wide">Sesi Aktif</p>
                             <p class="text-2xl md:text-3xl font-bold text-primary">{{ number_format($stats['activeSessions']) }}</p>
                         </div>
@@ -223,8 +223,8 @@
                     <span>Sebaran Geografis</span>
                 </h2>
                 <div id="map" class="w-full h-64 md:h-80 bg-body rounded-lg md:rounded-xl"></div>
-            </div>
-        </section>
+        </div>
+    </section>
         @endif
     </div>
 @endsection
