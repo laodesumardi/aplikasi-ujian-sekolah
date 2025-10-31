@@ -131,7 +131,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Body -->
                 <div class="bg-white px-6 py-6">
                     <p class="text-gray-700 mb-6">Anda yakin ingin menyelesaikan ujian ini? Pastikan semua jawaban sudah benar.</p>
