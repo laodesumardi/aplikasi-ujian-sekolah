@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamResult;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -13,7 +14,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
         $now = Carbon::now();
 
         // Get available exams for student's class
@@ -120,7 +121,7 @@ class DashboardController extends Controller
 
     public function ujianAktif(Request $request)
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
         $now = Carbon::now();
 
         // Get available exams for student's class
@@ -202,7 +203,7 @@ class DashboardController extends Controller
 
     public function riwayat(Request $request)
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
 
         // Get exam results for the student
         $query = ExamResult::with('exam.subject')
@@ -288,7 +289,7 @@ class DashboardController extends Controller
 
     public function profil()
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
 
         // Normalize legacy avatar path from storage to public/uploads/avatars (no symlink)
         if (!empty($user->avatar)) {
@@ -316,7 +317,7 @@ class DashboardController extends Controller
 
     public function updateProfil(Request $request)
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],

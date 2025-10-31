@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,7 @@ class ProfilController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
 
         // Normalize legacy avatar path from storage to public/uploads/avatars (no symlink)
         if (!empty($user->avatar)) {
@@ -43,7 +44,7 @@ class ProfilController extends Controller
 
     public function update(Request $request)
     {
-        $user = Auth::user();
+        $user = User::findOrFail(Auth::id());
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],

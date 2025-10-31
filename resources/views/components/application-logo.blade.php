@@ -21,6 +21,8 @@
     // Fallback to default logo files if no database logo found
     if (!$logoUrl) {
         $candidates = [
+            'uploads/logo.png',
+            'uploads/logo.svg',
             'images/logo.png',
             'images/logo.jpg',
             'images/logo.jpeg',

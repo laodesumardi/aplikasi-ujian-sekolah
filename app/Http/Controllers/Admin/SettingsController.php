@@ -14,24 +14,57 @@ class SettingsController extends Controller
     {
         $appName = AppSetting::getValue('app_name', 'CBT Admin Sekolah');
         $logoPath = AppSetting::getValue('logo_path', null);
-        
+
         // Normalize legacy storage path to public/uploads for preview without symlink
         if ($logoPath) {
-            $publicFile = public_path($logoPath);
+            $normalized = ltrim($logoPath, '/');
+            $publicFile = public_path($normalized);
+
             if (!($publicFile && file_exists($publicFile))) {
-                if (Storage::disk('public')->exists($logoPath)) {
+                // Handle legacy path with "storage/" prefix
+                if (Str::startsWith($normalized, 'storage/')) {
+                    $relative = Str::after($normalized, 'storage/');
+                    if (Storage::disk('public')->exists($relative)) {
+                        $uploadsDir = public_path('uploads');
+                        if (!is_dir($uploadsDir)) {
+                            @mkdir($uploadsDir, 0755, true);
+                        }
+                        $basename = basename($relative);
+                        $target = $uploadsDir . DIRECTORY_SEPARATOR . $basename;
+                        if (!file_exists($target)) {
+                            @copy(Storage::disk('public')->path($relative), $target);
+                        }
+                        $logoPath = 'uploads/' . $basename;
+                        AppSetting::setValue('logo_path', $logoPath);
+                    }
+                } elseif (Storage::disk('public')->exists($normalized)) {
+                    // Legacy path stored relative to storage/app/public
                     $uploadsDir = public_path('uploads');
                     if (!is_dir($uploadsDir)) {
                         @mkdir($uploadsDir, 0755, true);
                     }
-                    $basename = basename($logoPath);
+                    $basename = basename($normalized);
                     $target = $uploadsDir . DIRECTORY_SEPARATOR . $basename;
                     if (!file_exists($target)) {
-                        @copy(Storage::disk('public')->path($logoPath), $target);
+                        @copy(Storage::disk('public')->path($normalized), $target);
                     }
                     $logoPath = 'uploads/' . $basename;
                     AppSetting::setValue('logo_path', $logoPath);
                 }
+            }
+        }
+
+        // Fallback: use default public/uploads/logo.png if available
+        if (!$logoPath) {
+            $defaultLogo = 'uploads/logo.png';
+            if (file_exists(public_path($defaultLogo))) {
+                $logoPath = $defaultLogo;
+            }
+        } elseif (!file_exists(public_path($logoPath))) {
+            // If the configured logo is missing, fall back to default if present
+            $defaultLogo = 'uploads/logo.png';
+            if (file_exists(public_path($defaultLogo))) {
+                $logoPath = $defaultLogo;
             }
         }
         $tahunAjaran = AppSetting::getValue('tahun_ajaran', '2025/2026');
