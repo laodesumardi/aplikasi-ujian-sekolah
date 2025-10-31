@@ -105,8 +105,17 @@
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-4 md:px-6 py-4 whitespace-nowrap">
                                     <div class="flex-shrink-0">
-                                        @if($user->avatar && Storage::disk('public')->exists($user->avatar))
-                                            <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
+                                        @php
+                                            $avatarUrl = null;
+                                            if (!empty($user->avatar)) {
+                                                $file = public_path($user->avatar);
+                                                if ($file && file_exists($file)) {
+                                                    $avatarUrl = app()->environment('production') ? secure_asset($user->avatar) : asset($user->avatar);
+                                                }
+                                            }
+                                        @endphp
+                                        @if($avatarUrl)
+                                            <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
                                         @else
                                             <div class="w-12 h-12 rounded-full bg-primary/10 border-2 border-gray-200 flex items-center justify-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-6 h-6 text-primary">

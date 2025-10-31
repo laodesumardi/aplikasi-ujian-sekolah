@@ -15,6 +15,27 @@ class ProfilController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        // Normalize legacy avatar path from storage to public/uploads/avatars (no symlink)
+        if (!empty($user->avatar)) {
+            $publicFile = public_path($user->avatar);
+            if (!($publicFile && file_exists($publicFile))) {
+                if (Storage::disk('public')->exists($user->avatar)) {
+                    $uploadsDir = public_path('uploads/avatars');
+                    if (!is_dir($uploadsDir)) {
+                        @mkdir($uploadsDir, 0755, true);
+                    }
+                    $basename = basename($user->avatar);
+                    $target = $uploadsDir . DIRECTORY_SEPARATOR . $basename;
+                    if (!file_exists($target)) {
+                        @copy(Storage::disk('public')->path($user->avatar), $target);
+                    }
+                    $user->avatar = 'uploads/avatars/' . $basename;
+                    $user->save();
+                }
+            }
+        }
+
         // Get classes for guru dropdown
         $classes = Kelas::orderBy('level')->orderBy('name')->get();
         return view('teacher.profile', compact('user', 'classes'));
@@ -55,20 +76,44 @@ class ProfilController extends Controller
             $user->kelas = null;
         }
 
-        // Handle avatar upload
+        // Handle avatar upload (store in public/uploads/avatars, no symlink)
         if ($request->hasFile('avatar')) {
-            // Delete old avatar if exists
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
+            // Delete old avatar from public if exists
+            if (!empty($user->avatar)) {
+                $publicOld = public_path($user->avatar);
+                if ($publicOld && file_exists($publicOld)) {
+                    @unlink($publicOld);
+                }
+                // Also delete legacy storage file if exists
+                if (Storage::disk('public')->exists($user->avatar)) {
+                    Storage::disk('public')->delete($user->avatar);
+                }
             }
 
-            // Store new avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $avatarPath;
+            // Ensure uploads directory exists
+            $uploadsDir = public_path('uploads/avatars');
+            if (!is_dir($uploadsDir)) {
+                @mkdir($uploadsDir, 0755, true);
+            }
+
+            // Move new avatar to public/uploads/avatars
+            $file = $request->file('avatar');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = 'avatar_' . $user->id . '_' . time() . '.' . $extension;
+            if (!$file->move($uploadsDir, $filename)) {
+                return redirect()->route('guru.profile')->with('error', 'Gagal menyimpan avatar. Pastikan folder uploads memiliki permission write.');
+            }
+            $user->avatar = 'uploads/avatars/' . $filename;
         } elseif (isset($validated['remove_avatar']) && $validated['remove_avatar']) {
             // Remove avatar
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
+            if (!empty($user->avatar)) {
+                $publicOld = public_path($user->avatar);
+                if ($publicOld && file_exists($publicOld)) {
+                    @unlink($publicOld);
+                }
+                if (Storage::disk('public')->exists($user->avatar)) {
+                    Storage::disk('public')->delete($user->avatar);
+                }
             }
             $user->avatar = null;
         }

@@ -14,6 +14,26 @@ class SettingsController extends Controller
     {
         $appName = AppSetting::getValue('app_name', 'CBT Admin Sekolah');
         $logoPath = AppSetting::getValue('logo_path', null);
+        
+        // Normalize legacy storage path to public/uploads for preview without symlink
+        if ($logoPath) {
+            $publicFile = public_path($logoPath);
+            if (!($publicFile && file_exists($publicFile))) {
+                if (Storage::disk('public')->exists($logoPath)) {
+                    $uploadsDir = public_path('uploads');
+                    if (!is_dir($uploadsDir)) {
+                        @mkdir($uploadsDir, 0755, true);
+                    }
+                    $basename = basename($logoPath);
+                    $target = $uploadsDir . DIRECTORY_SEPARATOR . $basename;
+                    if (!file_exists($target)) {
+                        @copy(Storage::disk('public')->path($logoPath), $target);
+                    }
+                    $logoPath = 'uploads/' . $basename;
+                    AppSetting::setValue('logo_path', $logoPath);
+                }
+            }
+        }
         $tahunAjaran = AppSetting::getValue('tahun_ajaran', '2025/2026');
         $sessionTimeout = AppSetting::getValue('session_timeout', '60');
         $maintenance = AppSetting::getValue('maintenance_mode', 'false') === 'true';

@@ -1,6 +1,5 @@
 @php
     use App\Models\AppSetting;
-    use Illuminate\Support\Facades\Storage;
 
     $logoPath = AppSetting::getValue('logo_path', null);
 
@@ -15,16 +14,6 @@
                 $logoUrl = secure_asset($logoPath);
             } else {
                 $logoUrl = asset($logoPath);
-            }
-        } 
-        // Fallback: check if file exists in storage (legacy method: images/logo.png in storage/app/public)
-        elseif (Storage::disk('public')->exists($logoPath)) {
-            // File exists in storage, use storage URL
-            $storagePath = 'storage/' . $logoPath;
-            if (request()->secure() || config('app.env') === 'production') {
-                $logoUrl = secure_asset($storagePath);
-            } else {
-                $logoUrl = asset($storagePath);
             }
         }
     }

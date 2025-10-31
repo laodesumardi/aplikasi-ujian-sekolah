@@ -58,7 +58,6 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div class="flex-shrink-0">
                             @php
-                                use Illuminate\Support\Facades\Storage;
                                 $logoUrl = null;
                                 if ($logoPath) {
                                     // Check if file exists in public path (new method: public/uploads/logo.png)
@@ -72,16 +71,6 @@
                                             $logoUrl = secure_asset($logoPath) . $cacheBuster;
                                         } else {
                                             $logoUrl = asset($logoPath) . $cacheBuster;
-                                        }
-                                    } 
-                                    // Fallback: check if file exists in storage (legacy method)
-                                    elseif (Storage::disk('public')->exists($logoPath)) {
-                                        // Legacy storage path
-                                        $storagePath = 'storage/' . $logoPath;
-                                        if (request()->secure() || config('app.env') === 'production') {
-                                            $logoUrl = secure_asset($storagePath);
-                                        } else {
-                                            $logoUrl = asset($storagePath);
                                         }
                                     }
                                 }

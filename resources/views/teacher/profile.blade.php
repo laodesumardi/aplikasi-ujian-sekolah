@@ -49,8 +49,17 @@
                     <div class="flex flex-col sm:flex-row items-center gap-6">
                         <div class="relative">
                             <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100">
-                                @if($user->avatar)
-                                    <img id="avatarPreview" src="{{ Storage::url($user->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
+                                @php
+                                    $avatarUrl = null;
+                                    if (!empty($user->avatar)) {
+                                        $file = public_path($user->avatar);
+                                        if ($file && file_exists($file)) {
+                                            $avatarUrl = app()->environment('production') ? secure_asset($user->avatar) : asset($user->avatar);
+                                        }
+                                    }
+                                @endphp
+                                @if($avatarUrl)
+                                    <img id="avatarPreview" src="{{ $avatarUrl }}" alt="Avatar" class="w-full h-full object-cover">
                                 @else
                                     <div id="avatarPreview" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/80 text-white">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-16 h-16">

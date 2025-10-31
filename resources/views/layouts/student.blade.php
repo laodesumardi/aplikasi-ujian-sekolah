@@ -33,8 +33,17 @@
                                 $user = Auth::user();
                             @endphp
                             <a href="{{ route('siswa.profil') }}" class="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 ml-auto transition-colors">
-                                @if($user->avatar && Storage::disk('public')->exists($user->avatar))
-                                    <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" class="w-6 h-6 md:w-7 md:h-7 rounded-full object-cover border-2 border-white/30 flex-shrink-0">
+                                @php
+                                    $avatarUrl = null;
+                                    if (!empty($user->avatar)) {
+                                        $file = public_path($user->avatar);
+                                        if ($file && file_exists($file)) {
+                                            $avatarUrl = app()->environment('production') ? secure_asset($user->avatar) : asset($user->avatar);
+                                        }
+                                    }
+                                @endphp
+                                @if($avatarUrl)
+                                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="w-6 h-6 md:w-7 md:h-7 rounded-full object-cover border-2 border-white/30 flex-shrink-0">
                                 @else
                                     <div class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/30 flex-shrink-0">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 md:w-4 md:h-4 text-white/90">
