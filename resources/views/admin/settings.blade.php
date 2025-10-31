@@ -59,10 +59,9 @@
                         <div class="flex-shrink-0">
                             @if($logoPath)
                                 @php
-                                    $publicLogoUrl = ltrim(Storage::url($logoPath), '/');
                                     $secureLogoUrl = (request()->secure() || config('app.env') === 'production')
-                                        ? secure_asset($publicLogoUrl)
-                                        : asset($publicLogoUrl);
+                                        ? secure_asset($logoPath)
+                                        : asset($logoPath);
                                 @endphp
                                 <img src="{{ $secureLogoUrl }}" alt="Current Logo" id="logoPreview" class="w-32 h-32 object-contain border rounded-lg p-2 bg-gray-50">
                             @else

@@ -4,21 +4,15 @@
 
     $logoPath = AppSetting::getValue('logo_path', null);
 
-    // Generate HTTPS-safe URL for storage-based logo
+    // Generate HTTPS-safe URL for public-based logo (no symlink)
     $logoUrl = null;
     if ($logoPath) {
-        // Check if file exists in storage
-        if (Storage::disk('public')->exists($logoPath)) {
-            // Use Storage::url to get the correct public URL (e.g., '/storage/images/logo.png')
-            $storageUrl = Storage::url($logoPath);
-            $publicPath = ltrim($storageUrl, '/');
-            
-            // Use secure_asset for HTTPS or asset for HTTP
-            // This ensures proper URL generation based on APP_URL in .env
+        $publicFile = public_path($logoPath);
+        if ($publicFile && file_exists($publicFile)) {
             if (request()->secure() || config('app.env') === 'production') {
-                $logoUrl = secure_asset($publicPath);
+                $logoUrl = secure_asset($logoPath);
             } else {
-                $logoUrl = asset($publicPath);
+                $logoUrl = asset($logoPath);
             }
         }
     }

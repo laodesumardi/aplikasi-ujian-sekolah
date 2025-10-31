@@ -34,19 +34,35 @@ class SettingsController extends Controller
         // Update app name
         AppSetting::setValue('app_name', $validated['app_name']);
 
-        // Handle logo upload
+        // Handle logo upload (store in public/uploads, no symlink)
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
+            // Delete old logo if exists (support legacy storage and new public path)
             $oldLogoPath = AppSetting::getValue('logo_path');
-            if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-                Storage::disk('public')->delete($oldLogoPath);
+            if ($oldLogoPath) {
+                // Delete from public if exists
+                $publicOld = public_path($oldLogoPath);
+                if ($publicOld && file_exists($publicOld)) {
+                    @unlink($publicOld);
+                }
+                // Delete from storage (legacy)
+                if (Storage::disk('public')->exists($oldLogoPath)) {
+                    Storage::disk('public')->delete($oldLogoPath);
+                }
             }
 
-            // Store new logo
+            // Ensure uploads directory exists
+            $uploadsDir = public_path('uploads');
+            if (!is_dir($uploadsDir)) {
+                @mkdir($uploadsDir, 0755, true);
+            }
+
+            // Store new logo into public/uploads
             $logoFile = $request->file('logo');
-            $logoName = 'logo.' . $logoFile->getClientOriginalExtension();
-            $logoPath = $logoFile->storeAs('images', $logoName, 'public');
-            
+            $extension = $logoFile->getClientOriginalExtension();
+            $logoName = 'logo.' . $extension;
+            $logoFile->move($uploadsDir, $logoName);
+
+            $logoPath = 'uploads/' . $logoName;
             AppSetting::setValue('logo_path', $logoPath);
         }
 
