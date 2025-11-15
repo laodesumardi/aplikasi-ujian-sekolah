@@ -32,11 +32,32 @@ class DashboardController extends Controller
             'totalCompletedExams' => 0,
         ];
 
+        // Load Top 10 Kelas override from AppSetting if present
+        $topClassesSetting = \App\Models\AppSetting::getValue('top_classes', null);
+        $topClassesOverride = null;
+        if ($topClassesSetting) {
+            try {
+                $decoded = json_decode($topClassesSetting, true);
+                if (is_array($decoded)) {
+                    // Normalize entries
+                    $topClassesOverride = array_map(function($item) {
+                        return [
+                            'kelas' => (string)($item['kelas'] ?? ''),
+                            'total' => (int)($item['total'] ?? 0),
+                        ];
+                    }, $decoded);
+                }
+            } catch (\Throwable $e) {
+                $topClassesOverride = null;
+            }
+        }
+
         $stats = [
             'byRole' => $countByRole,
             'byKelas' => $countByKelas,
             'recentUsers' => $recentUsers,
             'activeSessions' => $activeSessions,
+            'topClassesOverride' => $topClassesOverride,
         ];
 
         // Geo placeholder: depends on available columns (e.g., province/city) or IP geolocation

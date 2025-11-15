@@ -88,6 +88,9 @@ Route::middleware('auth')->prefix('guru')->name('guru.')->group(function () {
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Top 10 Kelas management
+    Route::post('/top-classes', [\App\Http\Controllers\Admin\TopClassesController::class, 'save'])->name('top-classes.save');
+
     Route::get('/users', [UsersController::class, 'index'])->name('users');
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [UsersController::class, 'update'])->name('users.update');

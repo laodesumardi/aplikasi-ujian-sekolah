@@ -226,12 +226,19 @@
                             <!-- Kelas untuk Guru (Multi-select) -->
                             <div id="add_guru_kelas_wrapper" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kelas yang Diampu <span class="text-red-500">*</span></label>
-                                <select name="guru_kelas[]" id="add_guru_kelas" multiple class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" style="min-height: 100px;">
-                                    @foreach($classes as $class)
-                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="text-xs text-gray-500 mt-1">Tahan Ctrl/Cmd untuk memilih lebih dari satu kelas</p>
+                                @if($classes->isEmpty())
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-2 text-sm text-yellow-800">
+                                        Belum ada data kelas. Silakan tambahkan terlebih dahulu di menu
+                                        <a href="{{ route('admin.classes') }}" class="underline font-medium">Admin → Kelas</a>.
+                                    </div>
+                                @else
+                                    <select name="guru_kelas[]" id="add_guru_kelas" multiple class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" style="min-height: 100px;">
+                                        @foreach($classes as $class)
+                                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Tahan Ctrl/Cmd untuk memilih lebih dari satu kelas</p>
+                                @endif
                             </div>
                             
                             <!-- Kelas untuk Siswa (Tingkat + Sub-kelas) -->
@@ -241,22 +248,31 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Kelas <span class="text-red-500">*</span></label>
                                         <select name="siswa_tingkat" id="add_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                             <option value="">Pilih Tingkat</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                            <option value="6">6</option>
-                                            <option value="7">7</option>
-                                            <option value="8">8</option>
-                                            <option value="9">9</option>
-                                            <option value="10">10</option>
-                                            <option value="11">11</option>
-                                            <option value="12">12</option>
-                                            <option value="X">X</option>
-                                            <option value="XI">XI</option>
-                                            <option value="XII">XII</option>
+                                            <optgroup label="SD (Opsional)">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5">5</option>
+                                                <option value="6">6</option>
+                                            </optgroup>
+                                            <optgroup label="SMP">
+                                                <option value="7">7</option>
+                                                <option value="8">8</option>
+                                                <option value="9">9</option>
+                                            </optgroup>
+                                            <optgroup label="SMA (Angka)">
+                                                <option value="10">10</option>
+                                                <option value="11">11</option>
+                                                <option value="12">12</option>
+                                            </optgroup>
+                                            <optgroup label="SMA (Romawi)">
+                                                <option value="X">X</option>
+                                                <option value="XI">XI</option>
+                                                <option value="XII">XII</option>
+                                            </optgroup>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat 1–6 (opsional).</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>
@@ -345,22 +361,31 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Kelas <span class="text-red-500">*</span></label>
                                         <select name="siswa_tingkat" id="edit_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                             <option value="">Pilih Tingkat</option>
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                            <option value="6">6</option>
-                                            <option value="7">7</option>
-                                            <option value="8">8</option>
-                                            <option value="9">9</option>
-                                            <option value="10">10</option>
-                                            <option value="11">11</option>
-                                            <option value="12">12</option>
-                                            <option value="X">X</option>
-                                            <option value="XI">XI</option>
-                                            <option value="XII">XII</option>
+                                            <optgroup label="SD (Opsional)">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="4">4</option>
+                                                <option value="5">5</option>
+                                                <option value="6">6</option>
+                                            </optgroup>
+                                            <optgroup label="SMP">
+                                                <option value="7">7</option>
+                                                <option value="8">8</option>
+                                                <option value="9">9</option>
+                                            </optgroup>
+                                            <optgroup label="SMA (Angka)">
+                                                <option value="10">10</option>
+                                                <option value="11">11</option>
+                                                <option value="12">12</option>
+                                            </optgroup>
+                                            <optgroup label="SMA (Romawi)">
+                                                <option value="X">X</option>
+                                                <option value="XI">XI</option>
+                                                <option value="XII">XII</option>
+                                            </optgroup>
                                         </select>
+                                        <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat 1–6 (opsional).</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>

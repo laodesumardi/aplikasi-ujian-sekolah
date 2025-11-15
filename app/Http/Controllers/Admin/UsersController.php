@@ -47,7 +47,7 @@ class UsersController extends Controller
             'kelas' => ['nullable', 'string', 'max:255'],
         ];
         
-        // Add conditional validation based on role
+        // Tambahkan validasi kondisional berdasarkan peran (store: wajib kirim field terkait)
         if ($request->role === 'guru') {
             $rules['guru_kelas'] = ['required', 'array', 'min:1'];
             $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
@@ -60,16 +60,16 @@ class UsersController extends Controller
 
         $kelasValue = null;
         
-        if ($validated['role'] === 'guru' && !empty($validated['guru_kelas'])) {
+        if ($validated['role'] === 'guru' && $request->filled('guru_kelas')) {
             // For guru: store class names as comma-separated string
-            $selectedClasses = Kelas::whereIn('id', $validated['guru_kelas'])->pluck('name')->toArray();
+            $selectedClasses = Kelas::whereIn('id', $request->input('guru_kelas', []))->pluck('name')->toArray();
             $kelasValue = implode(', ', $selectedClasses);
-        } elseif ($validated['role'] === 'siswa' && !empty($validated['siswa_tingkat']) && !empty($validated['siswa_sub_kelas'])) {
+        } elseif ($validated['role'] === 'siswa' && $request->filled('siswa_tingkat') && $request->filled('siswa_sub_kelas')) {
             // For siswa: combine tingkat and sub_kelas (e.g., "X A", "XI B")
-            $kelasValue = $validated['siswa_tingkat'] . ' ' . $validated['siswa_sub_kelas'];
-        } elseif (!empty($validated['kelas'])) {
+            $kelasValue = $request->input('siswa_tingkat') . ' ' . $request->input('siswa_sub_kelas');
+        } elseif ($request->filled('kelas')) {
             // Fallback to manual input
-            $kelasValue = $validated['kelas'];
+            $kelasValue = $request->input('kelas');
         }
 
         User::create([

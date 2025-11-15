@@ -213,6 +213,140 @@
             </div>
         </section>
 
+        <!-- Kelola Top 10 Kelas -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 lg:mb-8" aria-labelledby="kelola-top-kelas">
+            <!-- Tabel Top 10 Kelas (Override jika ada) -->
+            <div class="bg-white rounded-xl lg:rounded-2xl shadow-lg p-5 md:p-6 hover:shadow-xl transition-shadow">
+                <h2 class="text-base md:text-lg font-bold text-gray-900 mb-4 md:mb-5 flex items-center gap-2">
+                    <div class="bg-primary/10 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 md:w-5 md:h-5 text-primary">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16v12H4z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h8"/>
+                        </svg>
+                    </div>
+                    <span>Top 10 Kelas (Terkini)</span>
+                </h2>
+                @php
+                    $topOverride = $stats['topClassesOverride'] ?? null;
+                    $topDisplay = [];
+                    if ($topOverride && is_array($topOverride) && count($topOverride) > 0) {
+                        $topDisplay = $topOverride;
+                    } else {
+                        // Map from query result to array format
+                        $topDisplay = collect($stats['byKelas'] ?? [])
+                            ->map(function($row) { return ['kelas' => $row->kelas, 'total' => $row->total]; })
+                            ->values()
+                            ->toArray();
+                    }
+                @endphp
+                <div class="overflow-x-auto -mx-5 md:-mx-6 px-5 md:px-6">
+                    <table class="min-w-full text-xs md:text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="text-left px-3 md:px-4 py-2 md:py-3 text-xs font-bold text-gray-700 uppercase tracking-wider">#</th>
+                                <th class="text-left px-3 md:px-4 py-2 md:py-3 text-xs font-bold text-gray-700 uppercase tracking-wider">Kelas</th>
+                                <th class="text-right px-3 md:px-4 py-2 md:py-3 text-xs font-bold text-gray-700 uppercase tracking-wider">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @forelse ($topDisplay as $i => $item)
+                                <tr class="hover:bg-primary/5 transition-colors">
+                                    <td class="px-3 md:px-4 py-2 md:py-3 text-gray-500 font-medium">{{ $i + 1 }}</td>
+                                    <td class="px-3 md:px-4 py-2 md:py-3 font-semibold text-gray-900">{{ $item['kelas'] ?? '-' }}</td>
+                                    <td class="px-3 md:px-4 py-2 md:py-3 text-right font-bold text-primary text-base md:text-lg">{{ number_format($item['total'] ?? 0) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td class="px-3 md:px-4 py-4 md:py-6 text-gray-500 text-center" colspan="3">Belum ada data kelas.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sidebar Edit Top 10 Kelas -->
+            <div class="bg-white rounded-xl lg:rounded-2xl shadow-lg p-5 md:p-6 hover:shadow-xl transition-shadow">
+                <h2 class="text-base md:text-lg font-bold text-gray-900 mb-4 md:mb-5 flex items-center gap-2">
+                    <div class="bg-primary/10 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4 md:w-5 md:h-5 text-primary">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </div>
+                    <span>Kelola Top 10 Kelas</span>
+                </h2>
+
+                <form id="topClassesForm" method="POST" action="{{ route('admin.top-classes.save') }}" class="space-y-4">
+                    @csrf
+                    <div id="topClassesList" class="space-y-3">
+                        @php $initial = $topDisplay; @endphp
+                        @foreach ($initial as $idx => $item)
+                        <div class="grid grid-cols-6 gap-2 items-center" data-row>
+                            <div class="col-span-3">
+                                <label class="text-xs text-gray-600">Kelas</label>
+                                <input type="text" name="entries[{{ $idx }}][kelas]" value="{{ $item['kelas'] ?? '' }}" class="w-full border rounded px-2 py-1 text-sm" placeholder="Mis. VII IPA 1" />
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-xs text-gray-600">Total</label>
+                                <input type="number" min="0" name="entries[{{ $idx }}][total]" value="{{ $item['total'] ?? 0 }}" class="w-full border rounded px-2 py-1 text-sm" />
+                            </div>
+                            <div class="col-span-1 flex items-end">
+                                <button type="button" class="inline-flex items-center justify-center w-full px-2 py-2 bg-red-500 text-white rounded hover:bg-red-600" onclick="removeTopRow(this)">Hapus</button>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="button" class="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white rounded hover:bg-primary/90" onclick="addTopRow()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            <span>Tambah Baris</span>
+                        </button>
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span>Simpan</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500">Maksimal 10 baris. Jika kosong, sistem akan menampilkan data otomatis dari pengguna.</p>
+                </form>
+
+                <script>
+                    function addTopRow() {
+                        const list = document.getElementById('topClassesList');
+                        const rows = list.querySelectorAll('[data-row]').length;
+                        if (rows >= 10) return alert('Maksimal 10 baris.');
+                        const idx = rows;
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'grid grid-cols-6 gap-2 items-center';
+                        wrapper.setAttribute('data-row','');
+                        wrapper.innerHTML = `
+                            <div class="col-span-3">
+                                <label class="text-xs text-gray-600">Kelas</label>
+                                <input type="text" name="entries[${idx}][kelas]" class="w-full border rounded px-2 py-1 text-sm" placeholder="Mis. VII IPA 1" />
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-xs text-gray-600">Total</label>
+                                <input type="number" min="0" name="entries[${idx}][total]" value="0" class="w-full border rounded px-2 py-1 text-sm" />
+                            </div>
+                            <div class="col-span-1 flex items-end">
+                                <button type="button" class="inline-flex items-center justify-center w-full px-2 py-2 bg-red-500 text-white rounded hover:bg-red-600" onclick="removeTopRow(this)">Hapus</button>
+                            </div>`;
+                        list.appendChild(wrapper);
+                    }
+                    function removeTopRow(btn) {
+                        const row = btn.closest('[data-row]');
+                        if (row) row.remove();
+                        // Re-index names
+                        const list = document.getElementById('topClassesList');
+                        Array.from(list.querySelectorAll('[data-row]')).forEach((el, i) => {
+                            el.querySelectorAll('input').forEach(input => {
+                                input.name = input.name.replace(/entries\[\d+\]/, `entries[${i}]`);
+                            });
+                        });
+                    }
+                </script>
+            </div>
+        </section>
+
         <!-- Geografis Section -->
         @if (!empty($geo['available']))
         <section class="mb-6 lg:mb-8" aria-labelledby="admin-geo">
