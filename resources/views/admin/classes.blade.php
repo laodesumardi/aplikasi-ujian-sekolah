@@ -147,29 +147,19 @@
                                     <select name="level" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                         <option value="">Pilih Tingkat</option>
                                         <optgroup label="SD">
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                            <option value="6">6</option>
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                            <option value="V">V</option>
+                                            <option value="VI">VI</option>
                                         </optgroup>
-                                        <optgroup label="SMP (Angka)">
-                                            <option value="7">7</option>
-                                            <option value="8">8</option>
-                                            <option value="9">9</option>
-                                        </optgroup>
-                                        <optgroup label="SMP (Romawi)">
+                                        <optgroup label="SMP">
                                             <option value="VII">VII</option>
                                             <option value="VIII">VIII</option>
                                             <option value="IX">IX</option>
                                         </optgroup>
-                                        <optgroup label="SMA (Angka)">
-                                            <option value="10">10</option>
-                                            <option value="11">11</option>
-                                            <option value="12">12</option>
-                                        </optgroup>
-                                        <optgroup label="SMA (Romawi)">
+                                        <optgroup label="SMA">
                                             <option value="X">X</option>
                                             <option value="XI">XI</option>
                                             <option value="XII">XII</option>
@@ -235,29 +225,19 @@
                                     <select name="level" id="edit_level" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                         <option value="">Pilih Tingkat</option>
                                         <optgroup label="SD">
-                                            <option value="1">1</option>
-                                            <option value="2">2</option>
-                                            <option value="3">3</option>
-                                            <option value="4">4</option>
-                                            <option value="5">5</option>
-                                            <option value="6">6</option>
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                            <option value="V">V</option>
+                                            <option value="VI">VI</option>
                                         </optgroup>
-                                        <optgroup label="SMP (Angka)">
-                                            <option value="7">7</option>
-                                            <option value="8">8</option>
-                                            <option value="9">9</option>
-                                        </optgroup>
-                                        <optgroup label="SMP (Romawi)">
+                                        <optgroup label="SMP">
                                             <option value="VII">VII</option>
                                             <option value="VIII">VIII</option>
                                             <option value="IX">IX</option>
                                         </optgroup>
-                                        <optgroup label="SMA (Angka)">
-                                            <option value="10">10</option>
-                                            <option value="11">11</option>
-                                            <option value="12">12</option>
-                                        </optgroup>
-                                        <optgroup label="SMA (Romawi)">
+                                        <optgroup label="SMA">
                                             <option value="X">X</option>
                                             <option value="XI">XI</option>
                                             <option value="XII">XII</option>
