@@ -52,7 +52,7 @@ class UsersController extends Controller
             $rules['guru_kelas'] = ['required', 'array', 'min:1'];
             $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
         } elseif ($request->role === 'siswa') {
-            $rules['siswa_tingkat'] = ['required', 'string', 'in:1,2,3,4,5,6,7,8,9,10,11,12,X,XI,XII'];
+            $rules['siswa_tingkat'] = ['required', 'string', 'in:I,II,III,IV,V,VI,VII,VIII,IX,X,XI,XII,1,2,3,4,5,6,7,8,9,10,11,12'];
             $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D'];
         }
         
@@ -65,8 +65,14 @@ class UsersController extends Controller
             $selectedClasses = Kelas::whereIn('id', $request->input('guru_kelas', []))->pluck('name')->toArray();
             $kelasValue = implode(', ', $selectedClasses);
         } elseif ($validated['role'] === 'siswa' && $request->filled('siswa_tingkat') && $request->filled('siswa_sub_kelas')) {
-            // For siswa: combine tingkat and sub_kelas (e.g., "X A", "XI B")
-            $kelasValue = $request->input('siswa_tingkat') . ' ' . $request->input('siswa_sub_kelas');
+            // For siswa: normalize tingkat to Roman and combine (e.g., "X A", "XI B")
+            $romans = [
+                '1' => 'I', '2' => 'II', '3' => 'III', '4' => 'IV', '5' => 'V', '6' => 'VI',
+                '7' => 'VII', '8' => 'VIII', '9' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII'
+            ];
+            $tingkat = $request->input('siswa_tingkat');
+            $tingkatRoman = $romans[$tingkat] ?? strtoupper($tingkat);
+            $kelasValue = $tingkatRoman . ' ' . $request->input('siswa_sub_kelas');
         } elseif ($request->filled('kelas')) {
             // Fallback to manual input
             $kelasValue = $request->input('kelas');
@@ -98,7 +104,7 @@ class UsersController extends Controller
             $rules['guru_kelas'] = ['required', 'array', 'min:1'];
             $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
         } elseif ($request->role === 'siswa') {
-            $rules['siswa_tingkat'] = ['required', 'string', 'in:1,2,3,4,5,6,7,8,9,10,11,12,X,XI,XII'];
+            $rules['siswa_tingkat'] = ['required', 'string', 'in:I,II,III,IV,V,VI,VII,VIII,IX,X,XI,XII,1,2,3,4,5,6,7,8,9,10,11,12'];
             $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D'];
         }
         
@@ -111,8 +117,14 @@ class UsersController extends Controller
             $selectedClasses = Kelas::whereIn('id', $validated['guru_kelas'])->pluck('name')->toArray();
             $kelasValue = implode(', ', $selectedClasses);
         } elseif ($validated['role'] === 'siswa' && !empty($validated['siswa_tingkat']) && !empty($validated['siswa_sub_kelas'])) {
-            // For siswa: combine tingkat and sub_kelas (e.g., "X A", "XI B")
-            $kelasValue = $validated['siswa_tingkat'] . ' ' . $validated['siswa_sub_kelas'];
+            // For siswa: normalize tingkat to Roman and combine (e.g., "X A", "XI B")
+            $romans = [
+                '1' => 'I', '2' => 'II', '3' => 'III', '4' => 'IV', '5' => 'V', '6' => 'VI',
+                '7' => 'VII', '8' => 'VIII', '9' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII'
+            ];
+            $tingkat = $validated['siswa_tingkat'];
+            $tingkatRoman = $romans[$tingkat] ?? strtoupper($tingkat);
+            $kelasValue = $tingkatRoman . ' ' . $validated['siswa_sub_kelas'];
         } elseif (!empty($validated['kelas'])) {
             // Fallback to manual input
             $kelasValue = $validated['kelas'];
