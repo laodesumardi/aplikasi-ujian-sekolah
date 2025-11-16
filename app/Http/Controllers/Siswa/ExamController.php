@@ -40,18 +40,24 @@ class ExamController extends Controller
             abort(403, 'Anda tidak memiliki akses ke ujian ini.');
         }
         
-        // Get or create exam result
-        $examResult = ExamResult::firstOrCreate(
-            [
-                'exam_id' => $exam->id,
-                'student_id' => $user->id,
-            ],
-            [
-                'answers' => [],
-                'status' => 'ongoing',
-                'started_at' => Carbon::now(),
-            ]
-        );
+        // If student has already completed this exam, prevent re-entry
+        $existingResult = ExamResult::where('exam_id', $exam->id)
+            ->where('student_id', $user->id)
+            ->first();
+
+        if ($existingResult && $existingResult->status === 'completed') {
+            return redirect()->route('siswa.exam.result', $exam->id)
+                ->with('info', 'Ujian ini sudah diselesaikan. Anda tidak dapat masuk ulang.');
+        }
+
+        // Get or create exam result for ongoing attempt
+        $examResult = $existingResult ?: ExamResult::create([
+            'exam_id' => $exam->id,
+            'student_id' => $user->id,
+            'answers' => [],
+            'status' => 'ongoing',
+            'started_at' => Carbon::now(),
+        ]);
         
         // If exam result exists but not started yet, update started_at
         if ($examResult->status === 'ongoing' && !$examResult->started_at) {

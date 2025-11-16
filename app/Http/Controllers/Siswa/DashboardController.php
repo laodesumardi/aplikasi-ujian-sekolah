@@ -20,6 +20,14 @@ class DashboardController extends Controller
         // Get available exams for student's class
         $availableExamsQuery = Exam::with('subject', 'classRelation')
             ->where('status', 'active');
+        // Hide exams already completed by this student
+        $availableExamsQuery->whereDoesntExist(function($q) use ($user) {
+            $q->selectRaw(1)
+              ->from('exam_results as er')
+              ->whereColumn('er.exam_id', 'exams.id')
+              ->where('er.student_id', $user->id)
+              ->where('er.status', 'completed');
+        });
 
         // Filter by class - if student has kelas, filter by it. Otherwise show all active exams
         if ($user->kelas) {
@@ -127,6 +135,14 @@ class DashboardController extends Controller
         // Get available exams for student's class
         $query = Exam::with('subject', 'classRelation')
             ->where('status', 'active');
+        // Hide exams already completed by this student
+        $query->whereDoesntExist(function($q) use ($user) {
+            $q->selectRaw(1)
+              ->from('exam_results as er')
+              ->whereColumn('er.exam_id', 'exams.id')
+              ->where('er.student_id', $user->id)
+              ->where('er.status', 'completed');
+        });
 
         // Filter by class - if student has kelas, filter by it. Otherwise show all active exams
         if ($user->kelas && trim($user->kelas) !== '') {
