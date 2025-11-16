@@ -21,7 +21,7 @@ class DashboardController extends Controller
         $availableExamsQuery = Exam::with('subject', 'classRelation')
             ->where('status', 'active');
         // Hide exams already completed by this student
-        $availableExamsQuery->whereDoesntExist(function($q) use ($user) {
+        $availableExamsQuery->whereNotExists(function($q) use ($user) {
             $q->selectRaw(1)
               ->from('exam_results as er')
               ->whereColumn('er.exam_id', 'exams.id')
@@ -136,7 +136,7 @@ class DashboardController extends Controller
         $query = Exam::with('subject', 'classRelation')
             ->where('status', 'active');
         // Hide exams already completed by this student
-        $query->whereDoesntExist(function($q) use ($user) {
+        $query->whereNotExists(function($q) use ($user) {
             $q->selectRaw(1)
               ->from('exam_results as er')
               ->whereColumn('er.exam_id', 'exams.id')
