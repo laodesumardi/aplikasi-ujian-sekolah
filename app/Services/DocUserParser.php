@@ -42,22 +42,38 @@ class DocUserParser
                         }
 
                         if (!$isHeaderParsed) {
-                            // Build header map
+                            // Build header map with normalization
+                            $aliases = [
+                                'nama' => 'name', 'name' => 'name',
+                                'email' => 'email',
+                                'role' => 'role', 'peran' => 'role',
+                                'kelas' => 'kelas',
+                                'password' => 'password', 'kata sandi' => 'password', 'sandi' => 'password',
+                                'no' => 'ignore', 'no.' => 'ignore', '#' => 'ignore', 'nomor' => 'ignore'
+                            ];
                             foreach ($values as $i => $h) {
                                 $key = strtolower(trim($h));
-                                // Normalize common variations
-                                $aliases = [
-                                    'nama' => 'name',
-                                    'name' => 'name',
-                                    'email' => 'email',
-                                    'role' => 'role',
-                                    'peran' => 'role',
-                                    'kelas' => 'kelas',
-                                    'password' => 'password',
-                                    'kata sandi' => 'password',
-                                ];
                                 $headerMap[$i] = $aliases[$key] ?? $key;
                             }
+
+                            // If required keys missing, guess mapping by position (skip ignored columns)
+                            $mapValues = array_values($headerMap);
+                            $hasRequired = in_array('name', $mapValues, true) && in_array('email', $mapValues, true) && in_array('role', $mapValues, true);
+                            if (!$hasRequired) {
+                                $candidates = [];
+                                foreach ($headerMap as $idx => $val) {
+                                    if (!in_array($val, ['ignore'], true)) {
+                                        $candidates[] = $idx;
+                                    }
+                                }
+                                $defaults = ['name', 'email', 'role', 'kelas', 'password'];
+                                foreach ($defaults as $di => $dkey) {
+                                    if (isset($candidates[$di])) {
+                                        $headerMap[$candidates[$di]] = $dkey;
+                                    }
+                                }
+                            }
+
                             $isHeaderParsed = true;
                             continue;
                         }
