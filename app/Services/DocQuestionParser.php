@@ -111,7 +111,10 @@ class DocQuestionParser
             if (preg_match('/^(\d+)\.\s*(.+)$/u', $line, $matches)) {
                 // Save previous question if exists
                 if ($currentQuestion && !empty($currentQuestion['question_text'])) {
-                    $questions[] = $currentQuestion;
+                    // Only accept complete multiple choice questions (avoid counting instructions)
+                    if ($this->isCompleteMultipleChoice($currentQuestion)) {
+                        $questions[] = $currentQuestion;
+                    }
                 }
                 
                 // Start new question
@@ -203,7 +206,9 @@ class DocQuestionParser
         
         // Don't forget the last question
         if ($currentQuestion && !empty($currentQuestion['question_text'])) {
-            $questions[] = $currentQuestion;
+            if ($this->isCompleteMultipleChoice($currentQuestion)) {
+                $questions[] = $currentQuestion;
+            }
         }
         
         // Clean up questions
@@ -224,5 +229,25 @@ class DocQuestionParser
         }
         
         return $questions;
+    }
+
+    private function isCompleteMultipleChoice(array $q): bool
+    {
+        if (($q['question_type'] ?? 'pilihan_ganda') !== 'pilihan_ganda') {
+            return false;
+        }
+        if (empty($q['correct_answer']) || !in_array($q['correct_answer'], ['A','B','C','D'], true)) {
+            return false;
+        }
+        if (empty($q['options']) || !is_array($q['options'])) {
+            return false;
+        }
+        foreach (['A','B','C','D'] as $opt) {
+            $val = isset($q['options'][$opt]) ? trim((string)$q['options'][$opt]) : '';
+            if ($val === '') {
+                return false;
+            }
+        }
+        return true;
     }
 }
