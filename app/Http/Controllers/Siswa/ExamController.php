@@ -16,9 +16,16 @@ class ExamController extends Controller
     {
         $user = Auth::user();
         
+        // Pastikan status ujian aktif
+        if ($exam->status !== 'active') {
+            return redirect()->route('siswa.ujian-aktif')
+                ->with('info', 'Ujian belum dibuka atau tidak aktif.');
+        }
+
         // Enforce access: student must have kelas and it must match exam's class
         if (!$user->kelas || trim($user->kelas) === '') {
-            abort(403, 'Anda belum mengatur kelas di profil. Set kelas terlebih dahulu untuk mengikuti ujian.');
+            return redirect()->route('siswa.profil')
+                ->with('error', 'Anda belum mengatur kelas di profil. Set kelas terlebih dahulu untuk mengikuti ujian.');
         }
 
         $hasAccess = false;
@@ -37,7 +44,9 @@ class ExamController extends Controller
         }
 
         if (!$hasAccess) {
-            abort(403, 'Anda tidak memiliki akses ke ujian ini (bukan kelas Anda).');
+            $kelasInfo = $exam->kelas_name ?? '-';
+            return redirect()->route('siswa.ujian-aktif')
+                ->with('error', "Ujian ini hanya untuk kelas: {$kelasInfo}. Anda tidak memiliki akses.");
         }
         
         // If student has already completed this exam, prevent re-entry
