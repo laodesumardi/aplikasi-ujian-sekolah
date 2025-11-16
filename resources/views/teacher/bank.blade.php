@@ -192,9 +192,24 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat (opsional)</label>
                                     <select name="level" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                         <option value="">Pilih Tingkat</option>
-                                        <option value="X">X</option>
-                                        <option value="XI">XI</option>
-                                        <option value="XII">XII</option>
+                                        <optgroup label="SD">
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                            <option value="V">V</option>
+                                            <option value="VI">VI</option>
+                                        </optgroup>
+                                        <optgroup label="SMP">
+                                            <option value="VII">VII</option>
+                                            <option value="VIII">VIII</option>
+                                            <option value="IX">IX</option>
+                                        </optgroup>
+                                        <optgroup label="SMA">
+                                            <option value="X">X</option>
+                                            <option value="XI">XI</option>
+                                            <option value="XII">XII</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div>
@@ -305,9 +320,24 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat (opsional)</label>
                                     <select name="level" id="edit_level" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                         <option value="">Pilih Tingkat</option>
-                                        <option value="X">X</option>
-                                        <option value="XI">XI</option>
-                                        <option value="XII">XII</option>
+                                        <optgroup label="SD">
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                            <option value="IV">IV</option>
+                                            <option value="V">V</option>
+                                            <option value="VI">VI</option>
+                                        </optgroup>
+                                        <optgroup label="SMP">
+                                            <option value="VII">VII</option>
+                                            <option value="VIII">VIII</option>
+                                            <option value="IX">IX</option>
+                                        </optgroup>
+                                        <optgroup label="SMA">
+                                            <option value="X">X</option>
+                                            <option value="XI">XI</option>
+                                            <option value="XII">XII</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div>
