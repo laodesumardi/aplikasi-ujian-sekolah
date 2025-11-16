@@ -27,19 +27,19 @@ class DashboardController extends Controller
                 }
             ]);
 
-        // Filter by class - if student has kelas, filter by it. Otherwise show all active exams
-        if ($user->kelas) {
-            $availableExamsQuery->where(function($query) use ($user) {
-                // Match by kelas field (exact match)
-                $query->where('kelas', $user->kelas)
-                      // Or match by class_id relation
-                      ->orWhereHas('classRelation', function($q) use ($user) {
-                          $q->where('name', $user->kelas);
-                      })
-                      // Partial match for kelas field
-                      ->orWhere('kelas', 'like', $user->kelas . '%')
-                      ->orWhere('kelas', 'like', '%' . $user->kelas . '%');
+        // Filter by class - ONLY show exams that match student's class
+        if ($user->kelas && trim($user->kelas) !== '') {
+            $studentKelas = trim($user->kelas);
+            $availableExamsQuery->where(function($query) use ($studentKelas) {
+                // Exact match by kelas field or class relation name (case-insensitive)
+                $query->whereRaw('TRIM(LOWER(kelas)) = ?', [strtolower($studentKelas)])
+                      ->orWhereHas('classRelation', function($q) use ($studentKelas) {
+                          $q->whereRaw('TRIM(LOWER(name)) = ?', [strtolower($studentKelas)]);
+                      });
             });
+        } else {
+            // If student has no class set, show none
+            $availableExamsQuery->whereRaw('1 = 0');
         }
 
         // Filter by date - show exams that are available now or already started
@@ -71,15 +71,19 @@ class DashboardController extends Controller
             ->get();
 
         // Get scheduled exams (upcoming)
-        $scheduledExams = Exam::with('subject', 'classRelation')
-            ->where(function($query) use ($user) {
-                $query->where('kelas', $user->kelas)
-                      ->orWhereHas('classRelation', function($q) use ($user) {
-                          if ($user->kelas) {
-                              $q->where('name', $user->kelas);
-                          }
+        $scheduledExamsQuery = Exam::with('subject', 'classRelation');
+        if ($user->kelas && trim($user->kelas) !== '') {
+            $studentKelas = trim($user->kelas);
+            $scheduledExamsQuery->where(function($query) use ($studentKelas) {
+                $query->whereRaw('TRIM(LOWER(kelas)) = ?', [strtolower($studentKelas)])
+                      ->orWhereHas('classRelation', function($q) use ($studentKelas) {
+                          $q->whereRaw('TRIM(LOWER(name)) = ?', [strtolower($studentKelas)]);
                       });
-            })
+            });
+        } else {
+            $scheduledExamsQuery->whereRaw('1 = 0');
+        }
+        $scheduledExams = $scheduledExamsQuery
             ->whereIn('status', ['scheduled', 'draft'])
             ->where(function($query) use ($now) {
                 $query->where('exam_date', '>', $now->toDateString())
@@ -141,28 +145,19 @@ class DashboardController extends Controller
                 }
             ]);
 
-        // Filter by class - if student has kelas, filter by it. Otherwise show all active exams
+        // Filter by class - STRICT: only student's class
         if ($user->kelas && trim($user->kelas) !== '') {
             $studentKelas = trim($user->kelas);
             $query->where(function($q) use ($studentKelas) {
-                // Match by kelas field (exact match - case insensitive, with trimmed spaces)
                 $q->whereRaw('TRIM(LOWER(kelas)) = ?', [strtolower($studentKelas)])
-                  // Or match by class_id relation
                   ->orWhereHas('classRelation', function($subQuery) use ($studentKelas) {
                       $subQuery->whereRaw('TRIM(LOWER(name)) = ?', [strtolower($studentKelas)]);
-                  })
-                  // Partial match for kelas field (starts with - case insensitive)
-                  ->orWhereRaw('LOWER(kelas) LIKE ?', [strtolower($studentKelas) . '%'])
-                  // Partial match for kelas field (ends with - case insensitive)
-                  ->orWhereRaw('LOWER(kelas) LIKE ?', ['%' . strtolower($studentKelas)])
-                  // Partial match for kelas field (contains - case insensitive)
-                  ->orWhereRaw('LOWER(kelas) LIKE ?', ['%' . strtolower($studentKelas) . '%'])
-                  // Or if exam has no kelas restriction (show all active exams regardless of kelas)
-                  ->orWhereNull('kelas')
-                  ->orWhere('kelas', '');
+                  });
             });
+        } else {
+            // No class set -> no exams shown
+            $query->whereRaw('1 = 0');
         }
-        // If student doesn't have kelas, show all active exams
 
         // Filter by date and time - show exams that are available now
         // Since status is already 'active', if teacher set it to active, it should be accessible
@@ -175,16 +170,17 @@ class DashboardController extends Controller
         $today = $now->toDateString();
         $currentTime = $now->toTimeString();
         
-        // For active exams, we'll show them regardless of date if status is already active
-        // But we'll still check for basic date/time logic for exams happening today
+        // For active exams, still respect basic date availability
         $query->where(function($q) use ($today, $currentTime) {
-            // Exam with no date restriction (always available)
             $q->whereNull('exam_date')
-              // Or exam date is in the past (always accessible if status is active)
               ->orWhere('exam_date', '<', $today)
-              // Or exam date is today or in the future - show active exams regardless
-              // This allows teachers to set exams as active in advance
-              ->orWhere('exam_date', '>=', $today);
+              ->orWhere(function($inner) use ($today, $currentTime) {
+                  $inner->where('exam_date', $today)
+                        ->where(function($timeQuery) use ($currentTime) {
+                            $timeQuery->whereNull('start_time')
+                                      ->orWhere('start_time', '<=', $currentTime);
+                        });
+              });
         });
 
         // Search filter

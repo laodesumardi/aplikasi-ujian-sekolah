@@ -16,28 +16,28 @@ class ExamController extends Controller
     {
         $user = Auth::user();
         
-        // Check if student has access to this exam
-        // Check class match
+        // Enforce access: student must have kelas and it must match exam's class
+        if (!$user->kelas || trim($user->kelas) === '') {
+            abort(403, 'Anda belum mengatur kelas di profil. Set kelas terlebih dahulu untuk mengikuti ujian.');
+        }
+
         $hasAccess = false;
         if ($exam->status === 'active') {
-            if (empty($exam->kelas) && empty($exam->class_id)) {
-                // Exam is for all classes
+            $studentKelas = trim($user->kelas);
+            $examKelas = trim($exam->kelas ?? '');
+
+            // Exact match by stored kelas
+            if ($examKelas !== '' && strcasecmp($studentKelas, $examKelas) === 0) {
                 $hasAccess = true;
-            } elseif ($user->kelas) {
-                $studentKelas = trim($user->kelas);
-                $examKelas = trim($exam->kelas ?? '');
-                
-                // Check if classes match
-                if (strtolower($studentKelas) === strtolower($examKelas)) {
-                    $hasAccess = true;
-                } elseif ($exam->classRelation && strtolower($studentKelas) === strtolower($exam->classRelation->name)) {
-                    $hasAccess = true;
-                }
+            }
+            // Or match by related class name
+            if (!$hasAccess && $exam->classRelation && strcasecmp($studentKelas, trim($exam->classRelation->name)) === 0) {
+                $hasAccess = true;
             }
         }
-        
+
         if (!$hasAccess) {
-            abort(403, 'Anda tidak memiliki akses ke ujian ini.');
+            abort(403, 'Anda tidak memiliki akses ke ujian ini (bukan kelas Anda).');
         }
         
         // If student has already completed this exam, prevent re-entry
