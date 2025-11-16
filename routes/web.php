@@ -18,7 +18,8 @@ use App\Http\Controllers\Siswa\ExamController as SiswaExamController;
 use App\Http\Controllers\Guru\ProfilController;
 
 Route::get('/', function () {
-    return redirect()->away('https://cbt.smpnegeri01namrole.sch.id/login');
+    // Arahkan ke halaman login lokal aplikasi ini
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', function () {
