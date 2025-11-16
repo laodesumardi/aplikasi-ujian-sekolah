@@ -50,12 +50,5 @@
         </div>
     </form>
 
-    <div class="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600 px-2">
-        <p class="mb-1">Akun demo:</p>
-        <p>
-            <span class="font-medium break-all">siswa@example.com</span>
-            <span class="mx-1">/</span>
-            <span class="font-medium">password</span>
-        </p>
-    </div>
+    
 </x-guest-layout>

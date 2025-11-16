@@ -460,6 +460,11 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">File (CSV, Excel, Word .docx)</label>
                                 <input type="file" name="file" accept=".csv,.xlsx,.xls,.docx" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                 <p class="text-xs text-gray-500 mt-1">Format file: CSV, Excel (.xlsx, .xls), atau Word (.docx) dengan tabel header: name, email, role, kelas, password</p>
+                                <div class="mt-2">
+                                    <a href="https://cbt.smpnegeri01namrole.sch.id/admin/users" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        Download template
+                                    </a>
+                                </div>
                             </div>
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                 <p class="text-sm text-blue-800">
