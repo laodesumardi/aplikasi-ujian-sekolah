@@ -9,10 +9,14 @@
         // Normalize path
         $normalizedPath = ltrim($logoPath, '/');
         $publicFile = public_path($normalizedPath);
-        
-        // Check if file exists in public folder
-        if ($publicFile && file_exists($publicFile)) {
-            // Build relative URL to current host
+        $storageFile = storage_path('app/public/' . $normalizedPath);
+
+        // Prefer storage file via storage link
+        if ($storageFile && file_exists($storageFile)) {
+            $relativePath = '/storage/' . ltrim($normalizedPath, '/');
+            $logoUrl = $relativePath . '?v=' . filemtime($storageFile);
+        } elseif ($publicFile && file_exists($publicFile)) {
+            // Fallback: public folder
             $relativePath = '/' . ltrim($normalizedPath, '/');
             $logoUrl = $relativePath . '?v=' . filemtime($publicFile);
         }
@@ -31,19 +35,25 @@
             'logo.svg',
         ];
         $logoFile = null;
+        // Check storage first
         foreach ($candidates as $c) {
-            $fullPath = public_path($c);
-            if (file_exists($fullPath)) { 
-                $logoFile = $c; 
-                break; 
+            $storagePath = storage_path('app/public/' . ltrim($c, '/'));
+            if (file_exists($storagePath)) { 
+                $logoFile = '/storage/' . ltrim($c, '/');
+                $logoUrl = $logoFile . '?v=' . filemtime($storagePath);
+                break;
             }
         }
-        // Build relative URL to current host (with cache busting)
-        if ($logoFile) {
-            $relativePath = '/' . ltrim($logoFile, '/');
-            $fullPath = public_path($logoFile);
-            $version = file_exists($fullPath) ? ('?v=' . filemtime($fullPath)) : '';
-            $logoUrl = $relativePath . $version;
+        // If not found in storage, check public folder
+        if (!$logoUrl) {
+            foreach ($candidates as $c) {
+                $fullPath = public_path($c);
+                if (file_exists($fullPath)) { 
+                    $logoFile = '/' . ltrim($c, '/'); 
+                    $logoUrl = $logoFile . '?v=' . filemtime($fullPath);
+                    break; 
+                }
+            }
         }
     }
 @endphp
