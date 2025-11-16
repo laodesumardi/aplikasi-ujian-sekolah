@@ -18,7 +18,7 @@ use App\Http\Controllers\Siswa\ExamController as SiswaExamController;
 use App\Http\Controllers\Guru\ProfilController;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->away('https://cbt.smpnegeri01namrole.sch.id/login');
 });
 
 Route::get('/dashboard', function () {
