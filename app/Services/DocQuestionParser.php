@@ -3,41 +3,71 @@
 namespace App\Services;
 
 use PhpOffice\PhpWord\IOFactory;
+use ZipArchive;
 
 class DocQuestionParser
 {
     public function parse($filePath)
     {
-        $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        
         // Get text content from DOC/DOCX
         $text = '';
-        
-        if ($extension === 'docx') {
-            $phpWord = IOFactory::load($filePath);
-            $sections = $phpWord->getSections();
-            
-            foreach ($sections as $section) {
-                $elements = $section->getElements();
-                foreach ($elements as $element) {
-                    if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
-                    } elseif (method_exists($element, 'getElements')) {
-                        foreach ($element->getElements() as $child) {
-                            if (method_exists($child, 'getText')) {
-                                $text .= $child->getText() . "\n";
+
+        // Ensure file is readable
+        if (!is_readable($filePath)) {
+            return [];
+        }
+
+        // Detect DOCX by checking zip contents (independent of extension)
+        $isDocx = false;
+        $zip = new \ZipArchive();
+        if ($zip->open($filePath) === true) {
+            // DOCX has word/document.xml inside
+            if ($zip->locateName('word/document.xml') !== false) {
+                $isDocx = true;
+            }
+            $zip->close();
+        }
+
+        if ($isDocx) {
+            // Try reading with Word2007 reader explicitly
+            try {
+                $reader = IOFactory::createReader('Word2007');
+                $phpWord = $reader->load($filePath);
+                $sections = $phpWord->getSections();
+
+                foreach ($sections as $section) {
+                    $elements = $section->getElements();
+                    foreach ($elements as $element) {
+                        if (method_exists($element, 'getText')) {
+                            $text .= $element->getText() . "\n";
+                        } elseif (method_exists($element, 'getElements')) {
+                            foreach ($element->getElements() as $child) {
+                                if (method_exists($child, 'getText')) {
+                                    $text .= $child->getText() . "\n";
+                                }
                             }
                         }
                     }
                 }
+            } catch (\Exception $e) {
+                // Fallback: extract raw XML and strip tags to get text
+                $zip2 = new \ZipArchive();
+                if ($zip2->open($filePath) === true) {
+                    $xml = $zip2->getFromName('word/document.xml') ?: '';
+                    $zip2->close();
+                    if (!empty($xml)) {
+                        // Replace paragraph boundaries with newlines before stripping tags
+                        $xml = preg_replace('/<\/?w:p[^>]*>/i', "\n", $xml);
+                        $xml = preg_replace('/<\/?w:br[^>]*>/i', "\n", $xml);
+                        $text = trim(strip_tags($xml));
+                    }
+                }
             }
-        } elseif ($extension === 'doc') {
-            // For .doc files (older format), try to read as plain text
-            // Note: PhpWord might not fully support .doc, so we'll try to read it
+        } else {
+            // Attempt to load as legacy DOC via PhpWord, else plain text
             try {
                 $phpWord = IOFactory::load($filePath);
                 $sections = $phpWord->getSections();
-                
                 foreach ($sections as $section) {
                     $elements = $section->getElements();
                     foreach ($elements as $element) {
@@ -47,8 +77,8 @@ class DocQuestionParser
                     }
                 }
             } catch (\Exception $e) {
-                // If DOC reading fails, try to read as text file
-                $text = file_get_contents($filePath);
+                // Fallback: treat as plain text
+                $text = @file_get_contents($filePath) ?: '';
             }
         }
         

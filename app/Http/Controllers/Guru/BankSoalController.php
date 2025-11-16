@@ -210,7 +210,9 @@ class BankSoalController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,doc,docx', 'max:5120'], // Max 5MB
+            'file' => ['required', 'file'],
+        ], [
+            'file.required' => 'Silakan pilih file untuk diimpor.',
         ]);
 
         try {
@@ -220,15 +222,20 @@ class BankSoalController extends Controller
             $errors = [];
             $message = '';
 
+            // Manual extension allowlist to avoid MIME mismatches
+            $allowedExt = ['csv','xlsx','xls','doc','docx'];
+            if (!in_array($extension, $allowedExt, true)) {
+                return redirect()->route('guru.bank')->with('error', 'File harus bertipe: CSV, XLSX, XLS, DOC, atau DOCX.');
+            }
+
             // Handle DOC/DOCX files
             if (in_array($extension, ['doc', 'docx'])) {
                 // Validate subject_id for DOC files
                 $request->validate([
                     'subject_id' => ['required', 'exists:subjects,id'],
                 ]);
-                // Store file temporarily
-                $tempPath = $file->store('temp', 'local');
-                $fullPath = Storage::path($tempPath);
+                // Use uploaded temp path directly to avoid storage path issues
+                $fullPath = $file->getPathname();
                 
                 try {
                     $parser = new DocQuestionParser();
@@ -270,11 +277,13 @@ class BankSoalController extends Controller
                         }
                     }
                     
-                    // Clean up temp file
-                    Storage::delete($tempPath);
                 } catch (\Exception $e) {
-                    Storage::delete($tempPath);
-                    throw $e;
+                    // Provide clearer message for common DOCX read errors
+                    $msg = $e->getMessage();
+                    if (stripos($msg, 'archive') !== false || stripos($msg, 'Zip') !== false) {
+                        $msg = 'File DOCX tidak dapat dibuka. Pastikan file valid (Office Open XML) dan bukan format lama (.doc). Coba simpan ulang sebagai DOCX atau gunakan tombol "Template DOC".';
+                    }
+                    throw new \Exception($msg);
                 }
                 
                 if ($imported > 0) {
