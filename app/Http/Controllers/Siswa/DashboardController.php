@@ -170,17 +170,13 @@ class DashboardController extends Controller
         $today = $now->toDateString();
         $currentTime = $now->toTimeString();
         
-        // For active exams, still respect basic date availability
-        $query->where(function($q) use ($today, $currentTime) {
+        // Untuk status 'active', tampilkan terlepas dari tanggal (guru mungkin mengaktifkan lebih awal)
+        // Tetap menampilkan yang tanpa tanggal, tanggal lampau, hari ini, atau mendatang
+        $query->where(function($q) use ($today) {
             $q->whereNull('exam_date')
               ->orWhere('exam_date', '<', $today)
-              ->orWhere(function($inner) use ($today, $currentTime) {
-                  $inner->where('exam_date', $today)
-                        ->where(function($timeQuery) use ($currentTime) {
-                            $timeQuery->whereNull('start_time')
-                                      ->orWhere('start_time', '<=', $currentTime);
-                        });
-              });
+              ->orWhere('exam_date', '=', $today)
+              ->orWhere('exam_date', '>', $today);
         });
 
         // Search filter
