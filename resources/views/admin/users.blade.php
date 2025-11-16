@@ -466,11 +466,43 @@
                                     </a>
                                 </div>
                             </div>
+                            <!-- Info: Format yang didukung -->
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                <p class="text-sm text-blue-800">
-                                    <strong>Format CSV yang diharapkan:</strong><br>
-                                    name,email,password,role,kelas<br>
-                                    Contoh: John Doe,john@example.com,password123,siswa,X IPA 1
+                                <p class="text-sm text-blue-800 mb-2"><strong>Format yang didukung:</strong></p>
+                                <ul class="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                                    <li><strong>CSV</strong> — Comma Separated Values</li>
+                                    <li><strong>XLSX</strong> — Excel 2007+</li>
+                                    <li><strong>XLS</strong> — Excel 97–2003</li>
+                                    <li><strong>DOCX</strong> — Microsoft Word (tabel satu baris header)</li>
+                                </ul>
+                            </div>
+
+                            <!-- Panduan: Excel/CSV -->
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                <p class="text-sm text-yellow-800 mb-2"><strong>Format untuk Excel/CSV:</strong></p>
+                                <p class="text-xs text-yellow-700">
+                                    Header yang disarankan: <span class="font-mono">name,email,role,kelas,password</span><br>
+                                    Contoh baris: <span class="font-mono">John Doe,john@example.com,siswa,X IPA 1,password123</span><br>
+                                    Nilai <span class="font-mono">role</span>: <span class="font-mono">admin</span>, <span class="font-mono">guru</span>, atau <span class="font-mono">siswa</span>.
+                                </p>
+                            </div>
+
+                            <!-- Panduan: DOCX -->
+                            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                                <p class="text-sm text-indigo-800 mb-2"><strong>Format untuk Word (.docx):</strong></p>
+                                <ul class="text-xs text-indigo-700 space-y-1 list-disc list-inside">
+                                    <li>Gunakan <strong>tabel</strong> dengan <strong>baris pertama sebagai header</strong>.</li>
+                                    <li>Header yang dikenali: <span class="font-mono">name</span>, <span class="font-mono">email</span>, <span class="font-mono">role</span>, <span class="font-mono">kelas</span>, <span class="font-mono">password</span>.</li>
+                                    <li>Alias yang didukung: <span class="font-mono">nama→name</span>, <span class="font-mono">peran→role</span>, <span class="font-mono">kata sandi/sandi→password</span>.</li>
+                                    <li>Kolom nomor seperti <span class="font-mono">No/No./#/Nomor</span> akan <strong>diabaikan</strong>.</li>
+                                    <li>Hindari header yang <em>merged</em> atau multi-baris; satu baris header di atas data.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Tips -->
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <p class="text-xs text-gray-700">
+                                    💡 <strong>Tips:</strong> Unduh template untuk melihat format yang benar. Pastikan baris pertama adalah header dan isi minimal kolom <span class="font-mono">name</span> & <span class="font-mono">email</span>.
                                 </p>
                             </div>
                         </div>
