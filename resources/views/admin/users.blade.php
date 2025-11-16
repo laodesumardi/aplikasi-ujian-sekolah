@@ -249,30 +249,25 @@
                                         <select name="siswa_tingkat" id="add_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                             <option value="">Pilih Tingkat</option>
                                             <optgroup label="SD (Opsional)">
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="4">4</option>
-                                                <option value="5">5</option>
-                                                <option value="6">6</option>
+                                                <option value="I">I</option>
+                                                <option value="II">II</option>
+                                                <option value="III">III</option>
+                                                <option value="IV">IV</option>
+                                                <option value="V">V</option>
+                                                <option value="VI">VI</option>
                                             </optgroup>
                                             <optgroup label="SMP">
-                                                <option value="7">7</option>
-                                                <option value="8">8</option>
-                                                <option value="9">9</option>
+                                                <option value="VII">VII</option>
+                                                <option value="VIII">VIII</option>
+                                                <option value="IX">IX</option>
                                             </optgroup>
-                                            <optgroup label="SMA (Angka)">
-                                                <option value="10">10</option>
-                                                <option value="11">11</option>
-                                                <option value="12">12</option>
-                                            </optgroup>
-                                            <optgroup label="SMA (Romawi)">
+                                            <optgroup label="SMA">
                                                 <option value="X">X</option>
                                                 <option value="XI">XI</option>
                                                 <option value="XII">XII</option>
                                             </optgroup>
                                         </select>
-                                        <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat 1–6 (opsional).</p>
+                                        <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat I–VI (opsional).</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>
@@ -362,30 +357,25 @@
                                         <select name="siswa_tingkat" id="edit_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                             <option value="">Pilih Tingkat</option>
                                             <optgroup label="SD (Opsional)">
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="4">4</option>
-                                                <option value="5">5</option>
-                                                <option value="6">6</option>
+                                                <option value="I">I</option>
+                                                <option value="II">II</option>
+                                                <option value="III">III</option>
+                                                <option value="IV">IV</option>
+                                                <option value="V">V</option>
+                                                <option value="VI">VI</option>
                                             </optgroup>
                                             <optgroup label="SMP">
-                                                <option value="7">7</option>
-                                                <option value="8">8</option>
-                                                <option value="9">9</option>
+                                                <option value="VII">VII</option>
+                                                <option value="VIII">VIII</option>
+                                                <option value="IX">IX</option>
                                             </optgroup>
-                                            <optgroup label="SMA (Angka)">
-                                                <option value="10">10</option>
-                                                <option value="11">11</option>
-                                                <option value="12">12</option>
-                                            </optgroup>
-                                            <optgroup label="SMA (Romawi)">
+                                            <optgroup label="SMA">
                                                 <option value="X">X</option>
                                                 <option value="XI">XI</option>
                                                 <option value="XII">XII</option>
                                             </optgroup>
                                         </select>
-                                        <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat 1–6 (opsional).</p>
+                                        <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat I–VI (opsional).</p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>
@@ -561,7 +551,15 @@
                 if (parts.length >= 2) {
                     const tingkatSelect = document.getElementById(`${prefix}_siswa_tingkat`);
                     const subKelasSelect = document.getElementById(`${prefix}_siswa_sub_kelas`);
-                    if (tingkatSelect) tingkatSelect.value = parts[0];
+                    // Normalize angka -> Romawi for compatibility
+                    const toRoman = (val) => {
+                        const map = {
+                            '1':'I','2':'II','3':'III','4':'IV','5':'V','6':'VI',
+                            '7':'VII','8':'VIII','9':'IX','10':'X','11':'XI','12':'XII'
+                        };
+                        return map[val] || val; // keep as-is if already Romawi
+                    };
+                    if (tingkatSelect) tingkatSelect.value = toRoman(parts[0]);
                     // Get last part as sub_kelas (in case there are multiple spaces)
                     if (subKelasSelect) subKelasSelect.value = parts[parts.length - 1];
                 } else if (parts.length === 1 && /^[A-D]$/i.test(parts[0])) {
