@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\UsersImport;
 use App\Services\DocUserParser;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
 
 class UsersController extends Controller
 {
@@ -256,6 +258,94 @@ class UsersController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             'Cache-Control' => 'no-store, no-cache',
         ]);
+    }
+
+    public function downloadDocTemplate()
+    {
+        $phpWord = new PhpWord();
+
+        // Set document properties
+        $properties = $phpWord->getDocInfo();
+        $appName = \App\Models\AppSetting::getValue('app_name', 'Aplikasi Ujian Sekolah');
+        $properties->setCreator($appName);
+        $properties->setTitle('Template Import Pengguna - Format DOCX');
+        $properties->setDescription('Template untuk impor data pengguna dalam format Microsoft Word (DOCX)');
+
+        // Add section with standard margins
+        $section = $phpWord->addSection([
+            'marginTop' => 1440,
+            'marginBottom' => 1440,
+            'marginLeft' => 1440,
+            'marginRight' => 1440,
+        ]);
+
+        // Title
+        $section->addText('TEMPLATE IMPORT PENGGUNA - FORMAT DOCX', [
+            'bold' => true,
+            'size' => 14,
+        ], [
+            'alignment' => 'center',
+            'spaceAfter' => 240,
+        ]);
+
+        // Instructions
+        $section->addText('Petunjuk:', [
+            'bold' => true,
+            'size' => 12,
+        ], [
+            'spaceBefore' => 240,
+            'spaceAfter' => 120,
+        ]);
+
+        $instructions = [
+            '1. Gunakan tabel di bawah dengan baris pertama sebagai header.',
+            '2. Header yang dikenali: name, email, role, kelas, password.',
+            '3. Nilai role: admin, guru, atau siswa.',
+            '4. Kolom kelas opsional. Untuk guru dapat berisi beberapa nama kelas dipisahkan koma.',
+            '5. Kolom password opsional. Jika kosong, sistem akan membuatkan otomatis.',
+        ];
+        foreach ($instructions as $line) {
+            $section->addText($line, ['size' => 10]);
+        }
+
+        // Table styles
+        $tableStyle = [
+            'borderSize' => 6,
+            'borderColor' => '999999',
+            'cellMargin' => 80,
+        ];
+        $firstRowStyle = [
+            'bgColor' => 'DDDDDD',
+        ];
+        $phpWord->addTableStyle('UsersImportTable', $tableStyle, $firstRowStyle);
+
+        // Add table with headers and one example row
+        $table = $section->addTable('UsersImportTable');
+        $headers = ['name', 'email', 'role', 'kelas', 'password'];
+        $example = ['John Doe', 'john@example.com', 'siswa', 'X IPA 1', 'password123'];
+
+        $headerRow = $table->addRow();
+        foreach ($headers as $h) {
+            $cell = $headerRow->addCell(3000);
+            $cell->addText($h, ['bold' => true]);
+        }
+
+        $dataRow = $table->addRow();
+        foreach ($example as $val) {
+            $cell = $dataRow->addCell(3000);
+            $cell->addText($val);
+        }
+
+        $filename = 'template_import_pengguna_' . date('Y-m-d') . '.docx';
+
+        // Save to temporary file and stream download
+        $tempFile = tempnam(sys_get_temp_dir(), 'template_users_');
+        $writer = IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ])->deleteFileAfterSend(true);
     }
 }
 

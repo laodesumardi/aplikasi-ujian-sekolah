@@ -501,9 +501,12 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">File (CSV, Excel, Word .docx)</label>
                                 <input type="file" name="file" accept=".csv,.xlsx,.xls,.docx" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                 <p class="text-xs text-gray-500 mt-1">Format file: CSV, Excel (.xlsx, .xls), atau Word (.docx) dengan tabel header: name, email, role, kelas, password</p>
-                                <div class="mt-2">
+                                <div class="mt-2 flex items-center gap-2">
                                     <a href="{{ route('admin.users.template') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                                        Download template
+                                        Download template CSV
+                                    </a>
+                                    <a href="{{ route('admin.users.template-doc') }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-purple-300 text-purple-700 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-purple-300">
+                                        Template DOCX
                                     </a>
                                 </div>
                             </div>
