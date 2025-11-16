@@ -8,6 +8,10 @@ use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\UsersImport;
+use App\Services\DocUserParser;
 
 class UsersController extends Controller
 {
@@ -161,11 +165,74 @@ class UsersController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls'],
+            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,docx'],
         ]);
 
-        // TODO: Implement import logic
-        return redirect()->route('admin.users')->with('success', 'Import data sedang diproses.');
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension());
+
+        if (in_array($ext, ['csv','xlsx','xls'])) {
+            $import = new UsersImport();
+            Excel::import($import, $file);
+            $report = $import->report();
+            $msg = "Impor selesai. Ditambah: {$report['created']}, diperbarui: {$report['updated']}, dilewati: {$report['skipped']}";
+            if (!empty($report['errors'])) {
+                $msg .= ". Error: " . implode(' | ', $report['errors']);
+            }
+            return redirect()->route('admin.users')->with('success', $msg);
+        }
+
+        if ($ext === 'docx') {
+            $parser = new DocUserParser();
+            $rows = $parser->parse($file->getPathname());
+
+            $created = 0; $updated = 0; $skipped = 0; $errors = [];
+            foreach ($rows as $i => $row) {
+                $name = trim((string)($row['name'] ?? $row['nama'] ?? ''));
+                $email = strtolower(trim((string)($row['email'] ?? '')));
+                $role = strtolower(trim((string)($row['role'] ?? '')));
+                $kelas = trim((string)($row['kelas'] ?? ''));
+                $password = (string)($row['password'] ?? '');
+
+                if (!$name || !$email || !filter_var($email, FILTER_VALIDATE_EMAIL) || !in_array($role, ['admin','guru','siswa'])) {
+                    $skipped++;
+                    $errors[] = "Baris DOCX #" . ($i + 1) . " tidak valid.";
+                    continue;
+                }
+
+                $existing = User::where('email', $email)->first();
+                if ($existing) {
+                    $data = [
+                        'name' => $name,
+                        'role' => $role,
+                        'kelas' => $kelas ?: null,
+                    ];
+                    if (!empty($password)) {
+                        $data['password'] = Hash::make($password);
+                    }
+                    $existing->update($data);
+                    $updated++;
+                } else {
+                    $pwd = !empty($password) ? $password : Str::random(10);
+                    User::create([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => Hash::make($pwd),
+                        'role' => $role,
+                        'kelas' => $kelas ?: null,
+                    ]);
+                    $created++;
+                }
+            }
+
+            $msg = "Impor DOCX selesai. Ditambah: {$created}, diperbarui: {$updated}, dilewati: {$skipped}";
+            if (!empty($errors)) {
+                $msg .= ". Error: " . implode(' | ', $errors);
+            }
+            return redirect()->route('admin.users')->with('success', $msg);
+        }
+
+        return redirect()->route('admin.users')->with('error', 'Format file tidak didukung.');
     }
 }
 
