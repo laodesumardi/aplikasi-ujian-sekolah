@@ -39,6 +39,20 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M4.93 4.93l14.14 14.14"/></svg>
+                <span class="font-semibold">Terjadi kesalahan pada input.</span>
+            </div>
+            <ul class="list-disc pl-5 text-sm">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <section aria-labelledby="master-pengguna">
         <!-- Header -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -199,15 +213,24 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                                <input type="text" name="name" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <input type="text" name="name" value="{{ old('name') }}" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                @error('name')
+                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input type="email" name="email" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                <input type="email" name="email" value="{{ old('email') }}" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                @error('email')
+                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                                 <input type="password" name="password" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
+                                @error('password')
+                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password</label>
@@ -217,10 +240,13 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Peran</label>
                                 <select name="role" id="add_role" required onchange="toggleKelasFields('add')" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                     <option value="">Pilih Peran</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="guru">Guru</option>
-                                    <option value="siswa">Siswa</option>
+                                    <option value="admin" {{ old('role')==='admin' ? 'selected' : '' }}>Admin</option>
+                                    <option value="guru" {{ old('role')==='guru' ? 'selected' : '' }}>Guru</option>
+                                    <option value="siswa" {{ old('role')==='siswa' ? 'selected' : '' }}>Siswa</option>
                                 </select>
+                                @error('role')
+                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                             
                             <!-- Kelas untuk Guru (Multi-select) -->
@@ -234,10 +260,16 @@
                                 @else
                                     <select name="guru_kelas[]" id="add_guru_kelas" multiple class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" style="min-height: 100px;">
                                         @foreach($classes as $class)
-                                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                            <option value="{{ $class->id }}" {{ in_array($class->id, old('guru_kelas', [])) ? 'selected' : '' }}>{{ $class->name }}</option>
                                         @endforeach
                                     </select>
                                     <p class="text-xs text-gray-500 mt-1">Tahan Ctrl/Cmd untuk memilih lebih dari satu kelas</p>
+                                    @error('guru_kelas')
+                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                    @error('guru_kelas.*')
+                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
                                 @endif
                             </div>
                             
@@ -249,35 +281,41 @@
                                         <select name="siswa_tingkat" id="add_siswa_tingkat" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                             <option value="">Pilih Tingkat</option>
                                             <optgroup label="SD (Opsional)">
-                                                <option value="I">I</option>
-                                                <option value="II">II</option>
-                                                <option value="III">III</option>
-                                                <option value="IV">IV</option>
-                                                <option value="V">V</option>
-                                                <option value="VI">VI</option>
+                                                <option value="I" {{ old('siswa_tingkat')==='I' ? 'selected' : '' }}>I</option>
+                                                <option value="II" {{ old('siswa_tingkat')==='II' ? 'selected' : '' }}>II</option>
+                                                <option value="III" {{ old('siswa_tingkat')==='III' ? 'selected' : '' }}>III</option>
+                                                <option value="IV" {{ old('siswa_tingkat')==='IV' ? 'selected' : '' }}>IV</option>
+                                                <option value="V" {{ old('siswa_tingkat')==='V' ? 'selected' : '' }}>V</option>
+                                                <option value="VI" {{ old('siswa_tingkat')==='VI' ? 'selected' : '' }}>VI</option>
                                             </optgroup>
                                             <optgroup label="SMP">
-                                                <option value="VII">VII</option>
-                                                <option value="VIII">VIII</option>
-                                                <option value="IX">IX</option>
+                                                <option value="VII" {{ old('siswa_tingkat')==='VII' ? 'selected' : '' }}>VII</option>
+                                                <option value="VIII" {{ old('siswa_tingkat')==='VIII' ? 'selected' : '' }}>VIII</option>
+                                                <option value="IX" {{ old('siswa_tingkat')==='IX' ? 'selected' : '' }}>IX</option>
                                             </optgroup>
                                             <optgroup label="SMA">
-                                                <option value="X">X</option>
-                                                <option value="XI">XI</option>
-                                                <option value="XII">XII</option>
+                                                <option value="X" {{ old('siswa_tingkat')==='X' ? 'selected' : '' }}>X</option>
+                                                <option value="XI" {{ old('siswa_tingkat')==='XI' ? 'selected' : '' }}>XI</option>
+                                                <option value="XII" {{ old('siswa_tingkat')==='XII' ? 'selected' : '' }}>XII</option>
                                             </optgroup>
                                         </select>
                                         <p class="text-xs text-gray-500 mt-1">Untuk SD, pilih tingkat I–VI (opsional).</p>
+                                        @error('siswa_tingkat')
+                                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Sub-kelas <span class="text-red-500">*</span></label>
                                         <select name="siswa_sub_kelas" id="add_siswa_sub_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                             <option value="">Pilih Sub-kelas</option>
-                                            <option value="A">A</option>
-                                            <option value="B">B</option>
-                                            <option value="C">C</option>
-                                            <option value="D">D</option>
+                                            <option value="A" {{ old('siswa_sub_kelas')==='A' ? 'selected' : '' }}>A</option>
+                                            <option value="B" {{ old('siswa_sub_kelas')==='B' ? 'selected' : '' }}>B</option>
+                                            <option value="C" {{ old('siswa_sub_kelas')==='C' ? 'selected' : '' }}>C</option>
+                                            <option value="D" {{ old('siswa_sub_kelas')==='D' ? 'selected' : '' }}>D</option>
                                         </select>
+                                        @error('siswa_sub_kelas')
+                                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                        @enderror
                                     </div>
                                 </div>
                             </div>
@@ -285,7 +323,10 @@
                             <!-- Fallback: Input manual (untuk admin atau kasus khusus) -->
                             <div id="add_kelas_manual_wrapper" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Kelas (opsional)</label>
-                                <input type="text" name="kelas" id="add_kelas" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Contoh: X IPA A">
+                                <input type="text" name="kelas" id="add_kelas" value="{{ old('kelas') }}" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Contoh: X IPA A">
+                                @error('kelas')
+                                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -655,6 +696,22 @@
                 closeEditModal();
                 closeDeleteModal();
                 closeImportModal();
+            }
+        });
+
+        // Auto-open Add Modal if validation failed and old role exists
+        document.addEventListener('DOMContentLoaded', function() {
+            const oldRole = @json(old('role'));
+            if (oldRole) {
+                const addModal = document.getElementById('addModal');
+                if (addModal) {
+                    addModal.classList.remove('hidden');
+                    const roleSelect = document.getElementById('add_role');
+                    if (roleSelect) {
+                        roleSelect.value = oldRole;
+                        toggleKelasFields('add');
+                    }
+                }
             }
         });
     </script>
