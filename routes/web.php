@@ -95,7 +95,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [UsersController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
-    Route::post('/users/import', [UsersController::class, 'import'])->name('users.import');
+Route::post('/users/import', [UsersController::class, 'import'])->name('users.import');
+Route::get('/users/template', [UsersController::class, 'downloadTemplate'])->name('users.template');
 
     Route::get('/subjects', [SubjectsController::class, 'index'])->name('subjects');
     Route::post('/subjects', [SubjectsController::class, 'store'])->name('subjects.store');

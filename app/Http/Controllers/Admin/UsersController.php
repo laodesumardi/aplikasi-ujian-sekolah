@@ -234,6 +234,29 @@ class UsersController extends Controller
 
         return redirect()->route('admin.users')->with('error', 'Format file tidak didukung.');
     }
+
+    public function downloadTemplate()
+    {
+        $headersRow = ['name', 'email', 'role', 'kelas', 'password'];
+        $exampleRow = ['John Doe', 'john@example.com', 'siswa', 'X IPA 1', 'password123'];
+
+        $filename = 'template_import_pengguna_' . date('Y-m-d') . '.csv';
+
+        $callback = function() use ($headersRow, $exampleRow) {
+            $f = fopen('php://output', 'w');
+            // Optional: add UTF-8 BOM for Excel compatibility
+            // fwrite($f, "\xEF\xBB\xBF");
+            fputcsv($f, $headersRow);
+            fputcsv($f, $exampleRow);
+            fclose($f);
+        };
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'no-store, no-cache',
+        ]);
+    }
 }
 
 

@@ -461,7 +461,7 @@
                                 <input type="file" name="file" accept=".csv,.xlsx,.xls,.docx" required class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
                                 <p class="text-xs text-gray-500 mt-1">Format file: CSV, Excel (.xlsx, .xls), atau Word (.docx) dengan tabel header: name, email, role, kelas, password</p>
                                 <div class="mt-2">
-                                    <a href="https://cbt.smpnegeri01namrole.sch.id/admin/users" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <a href="{{ route('admin.users.template') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
                                         Download template
                                     </a>
                                 </div>
