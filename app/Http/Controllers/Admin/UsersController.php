@@ -197,6 +197,11 @@ class UsersController extends Controller
             $parser = new DocUserParser();
             $rows = $parser->parse($file->getPathname());
 
+            // If parser returns no rows, provide a helpful error
+            if (empty($rows)) {
+                return redirect()->route('admin.users')->with('error', 'Dokumen DOCX tidak berisi data yang dapat diimpor. Pastikan ada tabel dengan baris pertama sebagai header (name, email, role, kelas, password) dan minimal satu baris data. Anda dapat menggunakan tombol "Template DOCX" sebagai acuan.');
+            }
+
             $created = 0; $updated = 0; $skipped = 0; $errors = [];
             foreach ($rows as $i => $row) {
                 $name = trim((string)($row['name'] ?? $row['nama'] ?? ''));
