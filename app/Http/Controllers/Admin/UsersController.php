@@ -167,13 +167,20 @@ class UsersController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,xlsx,xls,docx'],
+            'file' => ['required', 'file'],
         ], [
-            'file.mimes' => 'File harus bertipe: CSV, XLSX, XLS, atau DOCX.',
+            'file.required' => 'Silakan pilih file untuk diimpor.',
         ]);
 
         $file = $request->file('file');
         $ext = strtolower($file->getClientOriginalExtension());
+        $allowedExt = ['csv','xlsx','xls','docx'];
+        if (!in_array($ext, $allowedExt, true)) {
+            return redirect()
+                ->route('admin.users')
+                ->withErrors(['file' => 'File harus bertipe: CSV, XLSX, XLS, atau DOCX.'])
+                ->withInput();
+        }
 
         if (in_array($ext, ['csv','xlsx','xls'])) {
             $import = new UsersImport();
