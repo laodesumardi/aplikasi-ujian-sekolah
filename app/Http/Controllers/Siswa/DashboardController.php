@@ -19,15 +19,13 @@ class DashboardController extends Controller
 
         // Get available exams for student's class
         $availableExamsQuery = Exam::with('subject', 'classRelation')
-            ->where('status', 'active');
-        // Hide exams already completed by this student
-        $availableExamsQuery->whereNotExists(function($q) use ($user) {
-            $q->selectRaw(1)
-              ->from('exam_results as er')
-              ->whereColumn('er.exam_id', 'exams.id')
-              ->where('er.student_id', $user->id)
-              ->where('er.status', 'completed');
-        });
+            ->where('status', 'active')
+            ->withCount([
+                'results as completed_by_me_count' => function($q) use ($user) {
+                    $q->where('student_id', $user->id)
+                      ->where('status', 'completed');
+                }
+            ]);
 
         // Filter by class - if student has kelas, filter by it. Otherwise show all active exams
         if ($user->kelas) {
@@ -120,7 +118,8 @@ class DashboardController extends Controller
             'totalExams' => $totalExams,
             'averageScore' => round($averageScore, 2),
             'highestScore' => round($highestScore, 2),
-            'availableExamsCount' => $availableExams->count(),
+            // Only count exams that have NOT been completed by the student
+            'availableExamsCount' => $availableExams->where('completed_by_me_count', 0)->count(),
             'scheduledExamsCount' => $scheduledExams->count(),
         ];
 
@@ -134,15 +133,13 @@ class DashboardController extends Controller
 
         // Get available exams for student's class
         $query = Exam::with('subject', 'classRelation')
-            ->where('status', 'active');
-        // Hide exams already completed by this student
-        $query->whereNotExists(function($q) use ($user) {
-            $q->selectRaw(1)
-              ->from('exam_results as er')
-              ->whereColumn('er.exam_id', 'exams.id')
-              ->where('er.student_id', $user->id)
-              ->where('er.status', 'completed');
-        });
+            ->where('status', 'active')
+            ->withCount([
+                'results as completed_by_me_count' => function($q) use ($user) {
+                    $q->where('student_id', $user->id)
+                      ->where('status', 'completed');
+                }
+            ]);
 
         // Filter by class - if student has kelas, filter by it. Otherwise show all active exams
         if ($user->kelas && trim($user->kelas) !== '') {

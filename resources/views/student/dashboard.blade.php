@@ -150,10 +150,23 @@
                                 @endif
                             </div>
                             <div class="bg-gray-50 px-5 md:px-6 py-4 border-t border-gray-200">
-                                <a href="{{ route('siswa.exam', $exam->id) }}" class="inline-flex items-center justify-center w-full gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors shadow-md">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z"/></svg>
-                                    Mulai Ujian
-                                </a>
+                                @if(($exam->completed_by_me_count ?? 0) > 0)
+                                    <div class="flex items-center gap-3">
+                                        <button disabled class="inline-flex items-center justify-center flex-1 gap-2 px-4 py-2 rounded-lg bg-gray-300 text-gray-600 cursor-not-allowed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Sudah Selesai
+                                        </button>
+                                        <a href="{{ route('siswa.exam.result', $exam->id) }}" class="inline-flex items-center justify-center flex-1 gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors shadow-md">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Lihat Hasil
+                                        </a>
+                                    </div>
+                                @else
+                                    <a href="{{ route('siswa.exam', $exam->id) }}" class="inline-flex items-center justify-center w-full gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors shadow-md">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z"/></svg>
+                                        Mulai Ujian
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     @endforeach
