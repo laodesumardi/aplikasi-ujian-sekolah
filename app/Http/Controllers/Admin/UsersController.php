@@ -168,6 +168,8 @@ class UsersController extends Controller
     {
         $request->validate([
             'file' => ['required', 'file', 'mimes:csv,xlsx,xls,docx'],
+        ], [
+            'file.mimes' => 'File harus bertipe: CSV, XLSX, XLS, atau DOCX.',
         ]);
 
         $file = $request->file('file');
