@@ -170,11 +170,18 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Program (opsional)</label>
                                     <select name="program" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                        <option value="">Pilih Program</option>
-                                        <option value="IPA">IPA</option>
-                                        <option value="IPS">IPS</option>
-                                        <option value="Umum">Umum</option>
+                                        <option value="">—Tanpa Program—</option>
+                                        @forelse($subjects as $subject)
+                                            <option value="{{ $subject->name }}">{{ $subject->name }}</option>
+                                        @empty
+                                            <option value="" disabled>Tidak ada data mapel. Tambahkan via Admin → Mapel.</option>
+                                        @endforelse
                                     </select>
+                                    @if($subjects->isEmpty())
+                                        <p class="text-xs text-gray-500 mt-1">Belum ada mapel. Tambahkan di <a href="{{ route('admin.subjects') }}" class="underline font-medium">Admin → Mapel</a>.</p>
+                                    @else
+                                        <p class="text-xs text-gray-500 mt-1">Opsi diambil dari Master Mapel; boleh dikosongkan.</p>
+                                    @endif
                                 </div>
                             </div>
                             <div>
@@ -248,11 +255,18 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Program (opsional)</label>
                                     <select name="program" id="edit_program" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30">
-                                        <option value="">Pilih Program</option>
-                                        <option value="IPA">IPA</option>
-                                        <option value="IPS">IPS</option>
-                                        <option value="Umum">Umum</option>
+                                        <option value="">—Tanpa Program—</option>
+                                        @forelse($subjects as $subject)
+                                            <option value="{{ $subject->name }}">{{ $subject->name }}</option>
+                                        @empty
+                                            <option value="" disabled>Tidak ada data mapel. Tambahkan via Admin → Mapel.</option>
+                                        @endforelse
                                     </select>
+                                    @if($subjects->isEmpty())
+                                        <p class="text-xs text-gray-500 mt-1">Belum ada mapel. Tambahkan di <a href="{{ route('admin.subjects') }}" class="underline font-medium">Admin → Mapel</a>.</p>
+                                    @else
+                                        <p class="text-xs text-gray-500 mt-1">Opsi diambil dari Master Mapel; boleh dikosongkan.</p>
+                                    @endif
                                 </div>
                             </div>
                             <div>

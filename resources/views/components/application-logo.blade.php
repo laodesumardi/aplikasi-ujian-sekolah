@@ -3,7 +3,7 @@
 
     $logoPath = AppSetting::getValue('logo_path', null);
 
-    // Generate HTTPS-safe URL for logo
+    // Generate URL for logo (prefer relative paths to avoid host/port mismatch)
     $logoUrl = null;
     if ($logoPath) {
         // Normalize path
@@ -12,22 +12,9 @@
         
         // Check if file exists in public folder
         if ($publicFile && file_exists($publicFile)) {
-            // Build absolute URL for production
-            $baseUrl = rtrim(config('app.url'), '/');
-            $isProduction = config('app.env') === 'production';
-            $isSecure = request()->secure() || $isProduction;
-            
-            // Force HTTPS in production
-            if ($isSecure && strpos($baseUrl, 'http://') === 0) {
-                $baseUrl = str_replace('http://', 'https://', $baseUrl);
-            }
-            
-            // Build absolute URL
-            $relativePath = ltrim($normalizedPath, '/');
-            $logoUrl = $baseUrl . '/' . $relativePath;
-            
-            // Add cache busting
-            $logoUrl .= '?v=' . filemtime($publicFile);
+            // Build relative URL to current host
+            $relativePath = '/' . ltrim($normalizedPath, '/');
+            $logoUrl = $relativePath . '?v=' . filemtime($publicFile);
         }
     }
 
@@ -51,13 +38,12 @@
                 break; 
             }
         }
-        // Use secure_asset for HTTPS or asset for HTTP
+        // Build relative URL to current host (with cache busting)
         if ($logoFile) {
-            if (request()->secure() || config('app.env') === 'production') {
-                $logoUrl = secure_asset($logoFile);
-            } else {
-                $logoUrl = asset($logoFile);
-            }
+            $relativePath = '/' . ltrim($logoFile, '/');
+            $fullPath = public_path($logoFile);
+            $version = file_exists($fullPath) ? ('?v=' . filemtime($fullPath)) : '';
+            $logoUrl = $relativePath . $version;
         }
     }
 @endphp

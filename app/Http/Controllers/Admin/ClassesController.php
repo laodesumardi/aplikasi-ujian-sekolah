@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 
 class ClassesController extends Controller
@@ -25,8 +26,11 @@ class ClassesController extends Controller
         }
 
         $classes = $query->orderBy('level')->orderBy('name')->paginate(10);
-        
-        return view('admin.classes', compact('classes'));
+
+        // Get subjects (program options) for classes form dropdowns
+        $subjects = Subject::orderBy('name')->get();
+
+        return view('admin.classes', compact('classes', 'subjects'));
     }
 
     public function store(Request $request)
