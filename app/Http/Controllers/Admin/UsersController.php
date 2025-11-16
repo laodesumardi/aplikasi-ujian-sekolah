@@ -190,7 +190,7 @@ class UsersController extends Controller
             foreach ($rows as $i => $row) {
                 $name = trim((string)($row['name'] ?? $row['nama'] ?? ''));
                 $email = strtolower(trim((string)($row['email'] ?? '')));
-                $role = strtolower(trim((string)($row['role'] ?? '')));
+                $role = strtolower(trim((string)($row['role'] ?? $row['peran'] ?? '')));
                 $kelas = trim((string)($row['kelas'] ?? ''));
                 $password = (string)($row['password'] ?? '');
 

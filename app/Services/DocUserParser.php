@@ -4,6 +4,8 @@ namespace App\Services;
 
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Element\Table;
+use PhpOffice\PhpWord\Element\TextRun;
+use PhpOffice\PhpWord\Element\Text;
 
 class DocUserParser
 {
@@ -34,9 +36,7 @@ class DocUserParser
                         foreach ($cells as $cell) {
                             $text = '';
                             foreach ($cell->getElements() as $child) {
-                                if (method_exists($child, 'getText')) {
-                                    $text .= $child->getText();
-                                }
+                                $text .= $this->extractText($child);
                             }
                             $values[] = trim($text);
                         }
@@ -51,8 +51,10 @@ class DocUserParser
                                     'name' => 'name',
                                     'email' => 'email',
                                     'role' => 'role',
+                                    'peran' => 'role',
                                     'kelas' => 'kelas',
                                     'password' => 'password',
+                                    'kata sandi' => 'password',
                                 ];
                                 $headerMap[$i] = $aliases[$key] ?? $key;
                             }
@@ -76,5 +78,33 @@ class DocUserParser
         }
 
         return $rowsOut;
+    }
+
+    private function extractText($element): string
+    {
+        // Handle direct text
+        if ($element instanceof Text) {
+            return (string) $element->getText();
+        }
+        // Handle nested run (contains Text elements)
+        if ($element instanceof TextRun) {
+            $txt = '';
+            foreach ($element->getElements() as $child) {
+                $txt .= $this->extractText($child);
+            }
+            return $txt;
+        }
+        // Fallback: try getText or recurse if it has children
+        if (method_exists($element, 'getText')) {
+            return (string) $element->getText();
+        }
+        if (method_exists($element, 'getElements')) {
+            $txt = '';
+            foreach ($element->getElements() as $child) {
+                $txt .= $this->extractText($child);
+            }
+            return $txt;
+        }
+        return '';
     }
 }
