@@ -312,6 +312,10 @@
                                             <option value="B" {{ old('siswa_sub_kelas')==='B' ? 'selected' : '' }}>B</option>
                                             <option value="C" {{ old('siswa_sub_kelas')==='C' ? 'selected' : '' }}>C</option>
                                             <option value="D" {{ old('siswa_sub_kelas')==='D' ? 'selected' : '' }}>D</option>
+                                            <option value="E" {{ old('siswa_sub_kelas')==='E' ? 'selected' : '' }}>E</option>
+                                            <option value="F" {{ old('siswa_sub_kelas')==='F' ? 'selected' : '' }}>F</option>
+                                            <option value="G" {{ old('siswa_sub_kelas')==='G' ? 'selected' : '' }}>G</option>
+                                            <option value="H" {{ old('siswa_sub_kelas')==='H' ? 'selected' : '' }}>H</option>
                                         </select>
                                         @error('siswa_sub_kelas')
                                             <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
@@ -426,6 +430,10 @@
                                             <option value="B">B</option>
                                             <option value="C">C</option>
                                             <option value="D">D</option>
+                                            <option value="E">E</option>
+                                            <option value="F">F</option>
+                                            <option value="G">G</option>
+                                            <option value="H">H</option>
                                         </select>
                                     </div>
                                 </div>
@@ -646,7 +654,7 @@
                     if (tingkatSelect) tingkatSelect.value = toRoman(parts[0]);
                     // Get last part as sub_kelas (in case there are multiple spaces)
                     if (subKelasSelect) subKelasSelect.value = parts[parts.length - 1];
-                } else if (parts.length === 1 && /^[A-D]$/i.test(parts[0])) {
+                } else if (parts.length === 1 && /^[A-H]$/i.test(parts[0])) {
                     // Handle case where only sub_kelas is provided
                     const subKelasSelect = document.getElementById(`${prefix}_siswa_sub_kelas`);
                     if (subKelasSelect) subKelasSelect.value = parts[0].toUpperCase();

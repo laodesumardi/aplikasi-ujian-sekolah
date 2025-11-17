@@ -59,7 +59,7 @@ class UsersController extends Controller
             $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
         } elseif ($request->role === 'siswa') {
             $rules['siswa_tingkat'] = ['required', 'string', 'in:I,II,III,IV,V,VI,VII,VIII,IX,X,XI,XII,1,2,3,4,5,6,7,8,9,10,11,12'];
-            $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D'];
+            $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D,E,F,G,H'];
         }
         
         $validated = $request->validate($rules);
@@ -111,7 +111,7 @@ class UsersController extends Controller
             $rules['guru_kelas.*'] = ['required', 'exists:classes,id'];
         } elseif ($request->role === 'siswa') {
             $rules['siswa_tingkat'] = ['required', 'string', 'in:I,II,III,IV,V,VI,VII,VIII,IX,X,XI,XII,1,2,3,4,5,6,7,8,9,10,11,12'];
-            $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D'];
+            $rules['siswa_sub_kelas'] = ['required', 'string', 'in:A,B,C,D,E,F,G,H'];
         }
         
         $validated = $request->validate($rules);
