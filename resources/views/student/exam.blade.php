@@ -6,8 +6,21 @@
     <title>Ujian: {{ $exam->title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             overflow-x: hidden;
+            overflow-y: auto;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f3f4f6;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             -khtml-user-select: none;
@@ -21,19 +34,21 @@
             overscroll-behavior-y: contain;
         }
 
-        /* Fullscreen mode indicator */
-        #fullscreenIndicator {
+        /* Sembunyikan scrollbar tapi tetap bisa scroll */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Container utama full height */
+        .exam-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            z-index: 9999;
-            pointer-events: none;
-            font-family: monospace;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Disable text selection on buttons */
@@ -41,87 +56,159 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
+
+        /* Peringatan floating */
+        #securityWarning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(220, 38, 38, 0.95);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            z-index: 10000;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        #securityWarning.show {
+            transform: translateY(0);
+        }
+
+        /* Overlay blokir */
+        #blockOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Loading overlay */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-direction: column;
+            gap: 20px;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Header dengan Timer -->
-    <header class="sticky top-0 z-50 bg-white shadow-md">
-        <div class="flex items-center justify-between px-4 py-3 mx-auto max-w-7xl">
-            <div>
-                <h1 class="text-lg font-bold text-gray-900">{{ $exam->title }}</h1>
-                <p class="text-sm text-gray-600">{{ $exam->subject->name ?? '-' }} | Durasi: {{ $exam->duration }} menit</p>
-            </div>
-            <div id="timerBox" class="flex items-center gap-2 px-4 py-2 text-white bg-orange-600 border-2 border-red-600 rounded-lg shadow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                    <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                    <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5zm0 2.25a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" clip-rule="evenodd" />
-                </svg>
-                <span class="font-mono text-lg font-semibold" id="timerDisplay">00:00:00</span>
-            </div>
-        </div>
-    </header>
+<body>
+    <!-- Security Warning -->
+    <div id="securityWarning">
+        ⚠️ DILARANG KELUAR DARI APLIKASI UJIAN! Jawaban akan tersimpan otomatis.
+    </div>
 
-    <div class="px-4 py-6 mx-auto max-w-7xl">
-        <div class="flex flex-col gap-6 lg:flex-row">
-            <!-- Question Column (70%) -->
-            <div class="flex-1 lg:w-2/3">
-                <div class="p-6 bg-white rounded-lg shadow-lg">
-                    <div id="questionArea" class="space-y-6">
-                        <div class="flex items-center justify-between gap-3 mb-4">
-                            <div class="flex items-center flex-1 gap-3">
-                                <span class="inline-flex items-center justify-center w-10 h-10 text-lg font-bold text-white rounded-lg bg-primary" id="currentNumber">1</span>
-                                <h2 class="flex-1 text-xl font-semibold text-gray-900" id="questionText">Memuat soal...</h2>
+    <!-- Block Overlay (jika mencoba keluar) -->
+    <div id="blockOverlay">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <h2 style="margin: 20px 0 10px;">🚫 AKSES DITOLAK!</h2>
+        <p>Anda tidak diizinkan keluar dari aplikasi ujian.<br>Silakan lanjutkan mengerjakan soal.</p>
+        <button onclick="hideBlockOverlay()" style="margin-top: 20px; padding: 10px 30px; background: #4f46e5; border: none; border-radius: 8px; color: white; font-weight: bold;">Kembali ke Ujian</button>
+    </div>
+
+    <div class="exam-container" id="examContainer">
+        <!-- Header dengan Timer -->
+        <header class="sticky top-0 z-50 bg-white shadow-md">
+            <div class="flex items-center justify-between px-4 py-3 mx-auto max-w-7xl">
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900">{{ $exam->title }}</h1>
+                    <p class="text-sm text-gray-600">{{ $exam->subject->name ?? '-' }} | Durasi: {{ $exam->duration }} menit</p>
+                </div>
+                <div id="timerBox" class="flex items-center gap-2 px-4 py-2 text-white bg-orange-600 border-2 border-red-600 rounded-lg shadow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                        <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                        <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5zm0 2.25a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-mono text-lg font-semibold" id="timerDisplay">00:00:00</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="px-4 py-6 mx-auto max-w-7xl">
+            <div class="flex flex-col gap-6 lg:flex-row">
+                <!-- Question Column (70%) -->
+                <div class="flex-1 lg:w-2/3">
+                    <div class="p-6 bg-white rounded-lg shadow-lg">
+                        <div id="questionArea" class="space-y-6">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <div class="flex items-center flex-1 gap-3">
+                                    <span class="inline-flex items-center justify-center w-10 h-10 text-lg font-bold text-white rounded-lg bg-primary" id="currentNumber">1</span>
+                                    <h2 class="flex-1 text-xl font-semibold text-gray-900" id="questionText">Memuat soal...</h2>
+                                </div>
+                                <button id="bookmarkBtn" type="button" class="inline-flex items-center justify-center w-10 h-10 transition-colors border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50" title="Tandai soal untuk ditinjau kembali">
+                                    <svg id="bookmarkIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-gray-400">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
+                                    </svg>
+                                </button>
                             </div>
-                            <button id="bookmarkBtn" type="button" class="inline-flex items-center justify-center w-10 h-10 transition-colors border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50" title="Tandai soal untuk ditinjau kembali">
-                                <svg id="bookmarkIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-gray-400">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
-                                </svg>
-                            </button>
-                        </div>
 
-                        <div id="optionsArea" class="space-y-3"></div>
+                            <div id="optionsArea" class="space-y-3"></div>
 
-                        <div class="flex items-center justify-between pt-6 mt-8 border-t border-gray-200">
-                            <button id="prevBtn" class="px-6 py-2.5 rounded-lg bg-gray-300 text-gray-900 hover:bg-gray-400 transition-colors font-medium">Soal Sebelumnya</button>
-                            <button id="nextBtn" class="px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors font-medium">Soal Selanjutnya</button>
+                            <div class="flex items-center justify-between pt-6 mt-8 border-t border-gray-200">
+                                <button id="prevBtn" class="px-6 py-2.5 rounded-lg bg-gray-300 text-gray-900 hover:bg-gray-400 transition-colors font-medium">Soal Sebelumnya</button>
+                                <button id="nextBtn" class="px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors font-medium">Soal Selanjutnya</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Navigation Sidebar (30%) -->
-            <div class="lg:w-1/3">
-                <div class="sticky p-6 bg-white rounded-lg shadow-lg top-24">
-                    <h3 class="mb-4 text-lg font-bold text-gray-900">Navigasi Soal</h3>
+                <!-- Navigation Sidebar (30%) -->
+                <div class="lg:w-1/3">
+                    <div class="sticky p-6 bg-white rounded-lg shadow-lg top-24">
+                        <h3 class="mb-4 text-lg font-bold text-gray-900">Navigasi Soal</h3>
 
-                    <div class="p-3 mb-4 rounded-lg bg-gray-50">
-                        <div class="flex items-center justify-between mb-2 text-sm">
-                            <span class="text-gray-600">Total Soal:</span>
-                            <span class="font-semibold text-gray-900" id="totalQuestions">{{ $questions->count() }}</span>
+                        <div class="p-3 mb-4 rounded-lg bg-gray-50">
+                            <div class="flex items-center justify-between mb-2 text-sm">
+                                <span class="text-gray-600">Total Soal:</span>
+                                <span class="font-semibold text-gray-900" id="totalQuestions">{{ $questions->count() }}</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-2 text-sm">
+                                <span class="text-green-600">Sudah Dikerjakan:</span>
+                                <span class="font-semibold text-green-700" id="answeredCount">0</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-2 text-sm">
+                                <span class="text-yellow-600">Ditandai:</span>
+                                <span class="font-semibold text-yellow-700" id="bookmarkedCount">0</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Belum Dikerjakan:</span>
+                                <span class="font-semibold text-gray-700" id="unansweredCount">{{ $questions->count() }}</span>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between mb-2 text-sm">
-                            <span class="text-green-600">Sudah Dikerjakan:</span>
-                            <span class="font-semibold text-green-700" id="answeredCount">0</span>
-                        </div>
-                        <div class="flex items-center justify-between mb-2 text-sm">
-                            <span class="text-yellow-600">Ditandai:</span>
-                            <span class="font-semibold text-yellow-700" id="bookmarkedCount">0</span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-600">Belum Dikerjakan:</span>
-                            <span class="font-semibold text-gray-700" id="unansweredCount">{{ $questions->count() }}</span>
-                        </div>
-                    </div>
 
-                    <div id="navGrid" class="grid grid-cols-5 gap-2 mb-6 overflow-y-auto max-h-96"></div>
+                        <div id="navGrid" class="grid grid-cols-5 gap-2 mb-6 overflow-y-auto max-h-96"></div>
 
-                    <div class="mt-auto">
-                        <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
-                            @csrf
-                            <button type="button" id="finishBtn" class="w-full px-4 py-3 font-semibold text-white transition-colors bg-red-600 rounded-lg shadow-md hover:bg-red-700">
-                                Selesai Ujian
-                            </button>
-                        </form>
+                        <div class="mt-auto">
+                            <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
+                                @csrf
+                                <button type="button" id="finishBtn" class="w-full px-4 py-3 font-semibold text-white transition-colors bg-red-600 rounded-lg shadow-md hover:bg-red-700">
+                                    Selesai Ujian
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -218,50 +305,89 @@
         </div>
     </div>
 
-    <!-- Fullscreen Indicator -->
-    <div id="fullscreenIndicator" style="display: none;">
-        🔒 Mode Ujian Aktif
-    </div>
-
     <script>
-        // ============ FITUR PENGAMANAN UJIAN ============
+        // ============ FITUR PENGAMANAN UNTUK KODULAR ============
 
         // Variabel keamanan
         let isSubmittingExam = false;
         let hasFinishedExam = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
-        let backButtonPressed = false;
+        let blockCount = 0;
 
-        // 1. CEGAH TOMBOL BACK BROWSER
+        // Fungsi tampilkan peringatan
+        function showSecurityWarning(message) {
+            const warning = document.getElementById('securityWarning');
+            warning.textContent = message || '⚠️ DILARANG KELUAR DARI APLIKASI UJIAN!';
+            warning.classList.add('show');
+            setTimeout(() => {
+                warning.classList.remove('show');
+            }, 3000);
+        }
+
+        function showBlockOverlay() {
+            document.getElementById('blockOverlay').style.display = 'flex';
+            setTimeout(() => {
+                hideBlockOverlay();
+            }, 3000);
+        }
+
+        function hideBlockOverlay() {
+            document.getElementById('blockOverlay').style.display = 'none';
+        }
+
+        // 1. CEGAH TOMBOL BACK (UNTUK WEBVIEW KODULAR)
         (function preventBackButton() {
+            // Method 1: History API
             history.pushState(null, null, location.href);
+
             window.addEventListener('popstate', function(event) {
                 if (!isSubmittingExam && !hasFinishedExam) {
-                    const confirmExit = confirm('⚠️ PERINGATAN! ⚠️\n\nAnda akan keluar dari halaman ujian.\n\nJika keluar:\n❌ Jawaban yang belum disimpan akan hilang\n⏰ Waktu ujian tetap berjalan\n📱 Anda harus memulai ulang dari awal\n\nApakah Anda yakin ingin keluar?');
+                    showSecurityWarning('🚫 Tombol kembali dinonaktifkan! Lanjutkan ujian Anda.');
+                    showBlockOverlay();
+                    // Push state lagi agar tidak bisa back
+                    history.pushState(null, null, location.href);
 
-                    if (confirmExit) {
-                        hasFinishedExam = true;
-                        localStorage.setItem(`exam_{{ $exam->id }}_finished`, 'true');
-                        history.back();
-                    } else {
-                        history.pushState(null, null, location.href);
+                    // Catat percobaan keluar
+                    blockCount++;
+                    if (blockCount >= 3) {
+                        showSecurityWarning('⚠️ PERINGATAN! Jangan mencoba keluar dari ujian!');
                     }
                 } else {
                     history.pushState(null, null, location.href);
                 }
             });
+
+            // Method 2: Override event untuk WebView
+            if (window.Android) {
+                try {
+                    window.Android.onBackPressed = function() {
+                        if (!isSubmittingExam && !hasFinishedExam) {
+                            showSecurityWarning('🚫 Tombol kembali dinonaktifkan!');
+                            showBlockOverlay();
+                            return true;
+                        }
+                        return false;
+                    };
+                } catch(e) {}
+            }
         })();
 
-        // 2. CEGAH REFRESH/TUTUP TAB
+        // 2. CEGAH REFRESH/TUTUP WEBVIEW
+        let refreshAttempts = 0;
+
         window.addEventListener('beforeunload', function(e) {
-            // Hitung jawaban yang sudah diisi
             const answeredCount = Object.keys(answers || {}).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
             const totalQ = {{ $questions->count() }};
             const isCompleted = answeredCount === totalQ;
 
             if (!isSubmittingExam && !hasFinishedExam && !isCompleted && totalQ > 0) {
+                refreshAttempts++;
                 const message = '⚠️ PERINGATAN UJIAN ⚠️\n\nAnda sedang dalam ujian!\n\n• ' + (totalQ - answeredCount) + ' soal belum dijawab\n• Waktu akan terus berjalan\n• Data yang belum tersimpan akan hilang\n\nTekan BATAL untuk melanjutkan ujian.';
                 e.preventDefault();
                 e.returnValue = message;
+
+                if (refreshAttempts >= 2) {
+                    showSecurityWarning('⚠️ JANGAN REFRESH! Ini peringatan terakhir.');
+                }
                 return message;
             }
         });
@@ -269,6 +395,7 @@
         // 3. DETEKSI GESTURE BACK DI HP (Swipe dari tepi kiri)
         let touchStartXPosition = 0;
         let touchStartYPosition = 0;
+        let isBlockingGesture = false;
 
         document.addEventListener('touchstart', function(e) {
             touchStartXPosition = e.changedTouches[0].screenX;
@@ -281,106 +408,17 @@
             const deltaX = touchEndXPosition - touchStartXPosition;
             const deltaY = Math.abs(touchEndYPosition - touchStartYPosition);
 
-            // Deteksi swipe dari tepi kiri (x < 30) dengan gerakan ke kanan (deltaX > 80)
-            // dan bukan gerakan vertikal yang dominan
+            // Deteksi swipe dari tepi kiri (gesture back di banyak browser HP)
             if (touchStartXPosition < 40 && deltaX > 70 && deltaY < 100 && !isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
-                const confirmExit = confirm('⚠️ Gesture kembali terdeteksi!\n\nAnda akan keluar dari ujian. Lanjutkan?');
-                if (!confirmExit) {
-                    // Cegah gesture back
-                    e.stopPropagation();
-                    return false;
-                } else {
-                    hasFinishedExam = true;
-                    localStorage.setItem(`exam_{{ $exam->id }}_finished`, 'true');
-                }
+                e.stopPropagation();
+                showSecurityWarning('🚫 Gesture kembali dinonaktifkan!');
+                showBlockOverlay();
+                return false;
             }
         }, false);
 
-        // 4. NONAKTIFKAN MENU KONTEKS (Long Press)
-        document.addEventListener('contextmenu', function(e) {
-            if (!isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // 5. NONAKTIFKAN INSPECT ELEMENT DAN DEV TOOLS
-        document.addEventListener('keydown', function(e) {
-            // Nonaktifkan F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+Shift+C
-            if (e.key === 'F12' ||
-                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-                (e.ctrlKey && e.key === 'u') ||
-                (e.ctrlKey && e.key === 'U')) {
-                e.preventDefault();
-                return false;
-            }
-
-            // Nonaktifkan Ctrl+R (refresh) dan Ctrl+F5 (hard refresh)
-            if ((e.ctrlKey && (e.key === 'r' || e.key === 'R')) ||
-                (e.ctrlKey && e.shiftKey && (e.key === 'R'))) {
-                e.preventDefault();
-                alert('⚠️ Refresh tidak diizinkan selama ujian berlangsung!');
-                return false;
-            }
-        });
-
-        // 6. MODE LAYAR PENUH (Fullscreen)
-        let isFullscreenActive = false;
-
-        function requestFullscreen() {
-            const docEl = document.documentElement;
-            const requestMethod = docEl.requestFullscreen ||
-                                 docEl.webkitRequestFullscreen ||
-                                 docEl.msRequestFullscreen;
-
-            if (requestMethod) {
-                requestMethod.call(docEl);
-            }
-        }
-
-        function exitFullscreen() {
-            const exitMethod = document.exitFullscreen ||
-                              document.webkitExitFullscreen ||
-                              document.msExitFullscreen;
-            if (exitMethod) {
-                exitMethod.call(document);
-            }
-        }
-
-        // Cek dan minta fullscreen saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                if (!hasFinishedExam && !isSubmittingExam) {
-                    const enableFullscreen = confirm('🔒 MODE UJIAN AKTIF\n\nAktifkan mode layar penuh untuk pengalaman ujian terbaik dan mencegah keluar secara tidak sengaja?\n\n(Anda dapat menekan Batal jika tidak ingin)');
-                    if (enableFullscreen) {
-                        requestFullscreen();
-                        document.getElementById('fullscreenIndicator').style.display = 'block';
-                        setTimeout(() => {
-                            document.getElementById('fullscreenIndicator').style.opacity = '0';
-                            setTimeout(() => {
-                                document.getElementById('fullscreenIndicator').style.display = 'none';
-                            }, 2000);
-                        }, 3000);
-                    }
-                }
-            }, 500);
-        });
-
-        // Cegah keluar dari fullscreen dengan ESC (kecuali user mengkonfirmasi)
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && !hasFinishedExam && !isSubmittingExam) {
-                // Jika keluar dari fullscreen, tanyakan kembali
-                setTimeout(() => {
-                    const reenter = confirm('⚠️ Mode ujian memerlukan layar penuh!\n\nAktifkan kembali mode layar penuh untuk melanjutkan ujian?');
-                    if (reenter && !hasFinishedExam && !isSubmittingExam) {
-                        requestFullscreen();
-                    }
-                }, 100);
-            }
-        });
-
-        // 7. CEGAH PULL-TO-REFRESH
+        // 4. CEGAH SWIPE UNTUK MENUTUP (untuk WebView Kodular)
         let startY = 0;
         document.addEventListener('touchstart', function(e) {
             startY = e.touches[0].pageY;
@@ -388,19 +426,30 @@
 
         document.addEventListener('touchmove', function(e) {
             const currentY = e.touches[0].pageY;
-            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const scrollTop = document.querySelector('.exam-container').scrollTop;
 
-            // Jika di paling atas dan menarik ke bawah
-            if (scrollTop === 0 && currentY > startY && !isSubmittingExam && !hasFinishedExam) {
+            // Jika di paling atas dan menarik ke bawah (pull-to-refresh/close)
+            if (scrollTop === 0 && currentY > startY + 10 && !isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
+                showSecurityWarning('🚫 Tidak bisa pull-to-refresh selama ujian!');
+                return false;
             }
         }, { passive: false });
 
-        // 8. NONAKTIFKAN COPY-PASTE di area ujian
+        // 5. NONAKTIFKAN MENU KONTEKS (Long Press)
+        document.addEventListener('contextmenu', function(e) {
+            if (!isSubmittingExam && !hasFinishedExam) {
+                e.preventDefault();
+                showSecurityWarning('🚫 Menu konteks dinonaktifkan!');
+                return false;
+            }
+        });
+
+        // 6. NONAKTIFKAN COPY-PASTE
         document.addEventListener('copy', function(e) {
             if (!isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
-                alert('❌ Menyalin teks tidak diizinkan selama ujian!');
+                showSecurityWarning('❌ Menyalin teks tidak diizinkan!');
                 return false;
             }
         });
@@ -408,43 +457,20 @@
         document.addEventListener('cut', function(e) {
             if (!isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
-                alert('❌ Memotong teks tidak diizinkan selama ujian!');
+                showSecurityWarning('❌ Memotong teks tidak diizinkan!');
                 return false;
             }
         });
 
         document.addEventListener('paste', function(e) {
-            // Izinkan paste hanya di textarea untuk essay
             if (e.target.tagName !== 'TEXTAREA' && !isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
-                alert('❌ Menempel teks hanya diizinkan pada jawaban essay!');
+                showSecurityWarning('❌ Menempel teks hanya diizinkan pada jawaban essay!');
                 return false;
             }
         });
 
-        // 9. Tandai ujian selesai saat submit
-        const originalSubmit = document.getElementById('submitForm').submit;
-        document.getElementById('submitForm').submit = function() {
-            isSubmittingExam = true;
-            hasFinishedExam = true;
-            localStorage.setItem(`exam_{{ $exam->id }}_finished`, 'true');
-            localStorage.setItem(`exam_{{ $exam->id }}_completed_at`, new Date().toISOString());
-            return originalSubmit.apply(this, arguments);
-        };
-
-        // 10. DETEKSI BUKA DI TAB BARU
-        (function detectNewTab() {
-            const pageLoadTime = sessionStorage.getItem(`exam_{{ $exam->id }}_load_time`);
-            if (pageLoadTime && !hasFinishedExam && !isSubmittingExam) {
-                const timeDiff = Date.now() - parseInt(pageLoadTime);
-                if (timeDiff > 5000) { // Lebih dari 5 detik
-                    alert('⚠️ PERINGATAN: Deteksi pembukaan halaman di tab/window baru!\n\nUjian akan dilanjutkan, namun harap tidak membuka tab lain.');
-                }
-            }
-            sessionStorage.setItem(`exam_{{ $exam->id }}_load_time`, Date.now().toString());
-        })();
-
-        // 11. LOCK ORIENTATION (Mencegah rotasi layar di HP)
+        // 7. LOCK ORIENTATION (Mencegah rotasi layar)
         function lockOrientation() {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('portrait').catch(function(error) {
@@ -457,18 +483,56 @@
             lockOrientation();
         }
 
-        console.log('✅ Mode keamanan ujian diaktifkan');
+        // 8. DETEKSI MINIMIZE APP (visibility change)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && !isSubmittingExam && !hasFinishedExam) {
+                showSecurityWarning('⚠️ Jangan tinggalkan aplikasi ujian! Waktu tetap berjalan.');
+                // Catat waktu minimize untuk deteksi kecurangan
+                localStorage.setItem(`exam_{{ $exam->id }}_minimize_time`, new Date().toISOString());
+            }
+        });
+
+        // 9. CEGAH SCREENSHOT (deteksi)
+        let screenshotAttempts = 0;
+        document.addEventListener('keyup', function(e) {
+            // Deteksi kombinasi tombol screenshot (Power + Volume Down)
+            if (e.key === 'VolumeDown' || e.key === 'Power') {
+                screenshotAttempts++;
+                if (screenshotAttempts >= 2) {
+                    showSecurityWarning('📸 Screenshot terdeteksi! Ini akan dicatat.');
+                    // Kirim notifikasi ke server (opsional)
+                    fetch(`{{ url('/siswa/ujian') }}/${examId}/screenshot-detected`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify({ timestamp: new Date().toISOString() })
+                    }).catch(err => console.error('Error:', err));
+                    screenshotAttempts = 0;
+                }
+            }
+        });
+
+        // 10. Tandai ujian selesai
+        const originalSubmit = document.getElementById('submitForm').submit;
+        document.getElementById('submitForm').submit = function() {
+            isSubmittingExam = true;
+            hasFinishedExam = true;
+            localStorage.setItem(`exam_{{ $exam->id }}_finished`, 'true');
+            localStorage.setItem(`exam_{{ $exam->id }}_completed_at`, new Date().toISOString());
+            return originalSubmit.apply(this, arguments);
+        };
+
+        // Log keamanan
+        console.log('✅ Mode keamanan ujian untuk Kodular diaktifkan');
         console.log('📱 Fitur yang aktif:');
-        console.log('   - Cegah tombol back');
-        console.log('   - Cegah refresh/tutup tab');
+        console.log('   - Cegah tombol back (History API + WebView override)');
+        console.log('   - Cegah refresh/tutup WebView');
         console.log('   - Cegah gesture back HP');
+        console.log('   - Cegah swipe untuk keluar');
         console.log('   - Nonaktifkan menu konteks');
-        console.log('   - Nonaktifkan DevTools');
-        console.log('   - Mode layar penuh');
-        console.log('   - Cegah pull-to-refresh');
         console.log('   - Nonaktifkan copy-paste');
-        console.log('   - Deteksi tab baru');
         console.log('   - Lock orientation');
+        console.log('   - Deteksi minimize app');
+        console.log('   - Deteksi screenshot');
 
         // ============ KODE UJIAN UTAMA ============
 
@@ -478,9 +542,6 @@
         const questions = @json($questionsData);
         const savedAnswers = @json($answers ?? []);
         const totalQuestions = questions.length;
-
-        // Debug: Log all questions data
-        console.log('All questions data:', questions);
 
         let currentIndex = 0;
         const answers = {};
@@ -910,9 +971,16 @@
         timerInterval = setInterval(renderTimer, 1000);
         renderTimer();
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts (untuk testing, nonaktifkan di produksi)
         document.addEventListener('keydown', function(e) {
             if (e.target.tagName === 'TEXTAREA') return;
+
+            // Nonaktifkan semua shortcut keyboard yang bisa digunakan untuk keluar
+            if (e.key === 'Escape' || e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+                showSecurityWarning('🚫 Shortcut keyboard dinonaktifkan!');
+                return false;
+            }
 
             if (e.key === 'ArrowLeft' && currentIndex > 0) {
                 currentIndex--;
@@ -931,6 +999,11 @@
         renderQuestion(0);
         updateCounts();
         updateBookmarkedCount();
+
+        // Tampilkan pesan selamat datang
+        setTimeout(() => {
+            showSecurityWarning('🔒 Mode ujian aktif! Jangan keluar dari aplikasi.');
+        }, 1000);
     </script>
 </body>
 </html>
