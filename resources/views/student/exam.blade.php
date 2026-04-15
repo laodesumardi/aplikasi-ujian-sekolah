@@ -14,13 +14,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        html {
-            width: 100%;
-            height: 100%;
-            background: #000;
-        }
-
-        body {
+        html, body {
             width: 100%;
             height: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -30,7 +24,6 @@
             left: 0;
             right: 0;
             bottom: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
         }
 
         /* START SCREEN - LAYAR PEMBUKA */
@@ -48,15 +41,12 @@
             flex-direction: column;
             color: white;
             text-align: center;
-            backdrop-filter: blur(0px);
         }
 
         .start-screen h1 {
             font-size: clamp(24px, 6vw, 42px);
             margin-bottom: 20px;
             font-weight: 800;
-            letter-spacing: -0.5px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .start-screen p {
@@ -65,17 +55,6 @@
             opacity: 0.95;
             padding: 0 30px;
             max-width: 500px;
-            line-height: 1.6;
-        }
-
-        .start-screen .warning-text {
-            font-size: 12px;
-            margin-top: 30px;
-            opacity: 0.7;
-            position: absolute;
-            bottom: 30px;
-            left: 0;
-            right: 0;
         }
 
         .btn-start {
@@ -87,16 +66,14 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-            font-family: inherit;
         }
 
         .btn-start:active {
             transform: scale(0.96);
         }
 
-        /* KONTEN UJIAN - AWALNYA TERSEMBUNYI */
+        /* KONTEN UJIAN */
         .exam-wrapper {
             display: none;
             width: 100%;
@@ -106,7 +83,7 @@
             overflow-x: hidden;
         }
 
-        /* HEADER UJIAN */
+        /* HEADER */
         .exam-header {
             position: sticky;
             top: 0;
@@ -126,18 +103,6 @@
             gap: 10px;
         }
 
-        .exam-title h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1f2937;
-        }
-
-        .exam-title p {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 2px;
-        }
-
         .timer-box {
             display: flex;
             align-items: center;
@@ -147,22 +112,16 @@
             padding: 8px 18px;
             border-radius: 40px;
             font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-
-        .timer-box svg {
-            width: 20px;
-            height: 20px;
         }
 
         .timer-display {
             font-family: 'Courier New', monospace;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
 
-        /* KONTEN UTAMA */
+        /* MAIN CONTENT */
         .main-content {
             max-width: 1400px;
             margin: 0 auto;
@@ -172,7 +131,6 @@
             gap: 24px;
         }
 
-        /* DESKTOP: 2 KOLOM */
         @media (min-width: 992px) {
             .main-content {
                 flex-direction: row;
@@ -188,7 +146,6 @@
             }
         }
 
-        /* CARD SOAL */
         .question-card {
             background: white;
             border-radius: 20px;
@@ -223,7 +180,6 @@
             font-size: 18px;
             font-weight: 600;
             color: #1f2937;
-            line-height: 1.5;
         }
 
         .btn-bookmark {
@@ -236,7 +192,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
         }
 
         .btn-bookmark.active {
@@ -244,7 +199,6 @@
             background: #fffbeb;
         }
 
-        /* OPSI JAWABAN */
         .options-container {
             display: flex;
             flex-direction: column;
@@ -273,14 +227,12 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
-            accent-color: #4f46e5;
         }
 
         .option-text {
             flex: 1;
             font-size: 15px;
             color: #374151;
-            line-height: 1.4;
         }
 
         .essay-input {
@@ -299,7 +251,6 @@
             border-color: #4f46e5;
         }
 
-        /* TOMBOL NAVIGASI SOAL */
         .question-nav {
             display: flex;
             justify-content: space-between;
@@ -316,7 +267,6 @@
             cursor: pointer;
             border: none;
             font-size: 14px;
-            transition: all 0.2s;
         }
 
         .btn-prev {
@@ -334,7 +284,6 @@
             cursor: not-allowed;
         }
 
-        /* SIDEBAR NAVIGASI */
         .nav-card {
             background: white;
             border-radius: 20px;
@@ -389,7 +338,6 @@
             border: 2px solid #e5e7eb;
             background: white;
             cursor: pointer;
-            transition: all 0.15s;
         }
 
         .btn-finish {
@@ -403,14 +351,8 @@
             font-size: 16px;
             cursor: pointer;
             margin-top: 16px;
-            transition: all 0.2s;
         }
 
-        .btn-finish:active {
-            transform: scale(0.98);
-        }
-
-        /* MODAL */
         .modal {
             position: fixed;
             top: 0;
@@ -422,7 +364,6 @@
             display: none;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(4px);
         }
 
         .modal-content {
@@ -432,11 +373,6 @@
             width: 90%;
             max-width: 360px;
             text-align: center;
-        }
-
-        .modal-content h3 {
-            font-size: 22px;
-            margin-bottom: 16px;
         }
 
         .modal-buttons {
@@ -454,21 +390,6 @@
             cursor: pointer;
         }
 
-        /* SCROLLBAR */
-        .exam-wrapper::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .exam-wrapper::-webkit-scrollbar-track {
-            background: #e5e7eb;
-        }
-
-        .exam-wrapper::-webkit-scrollbar-thumb {
-            background: #4f46e5;
-            border-radius: 10px;
-        }
-
-        /* Peringatan floating */
         .toast-warning {
             position: fixed;
             bottom: 30px;
@@ -483,39 +404,48 @@
             z-index: 9999998;
             transition: transform 0.3s;
             white-space: nowrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .toast-warning.show {
             transform: translateX(-50%) translateY(0);
         }
+
+        .exam-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .exam-wrapper::-webkit-scrollbar-track {
+            background: #e5e7eb;
+        }
+
+        .exam-wrapper::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 
-<!-- LAYAR PEMBUKA (WAJIB UNTUK TRIGGER FULL SCREEN) -->
+<!-- LAYAR PEMBUKA -->
 <div class="start-screen" id="startScreen">
     <h1>📱🔒 {{ $exam->title }}</h1>
     <p>Mode Ujian Super Aman<br>Layar Penuh Total</p>
     <button class="btn-start" id="startBtn">🚀 MULAI UJIAN</button>
-    <div class="warning-text">
-        ⚠️ Dilarang keluar dari aplikasi selama ujian berlangsung<br>
-        Sistem akan mendeteksi setiap upaya keluar
+    <div style="position: absolute; bottom: 30px; font-size: 12px; opacity: 0.7;">
+        ⚠️ Dilarang keluar dari aplikasi selama ujian berlangsung
     </div>
 </div>
 
-<!-- PEMBUNGKUS UJIAN -->
+<!-- KONTEN UJIAN -->
 <div class="exam-wrapper" id="examWrapper">
-
-    <!-- HEADER -->
     <div class="exam-header">
         <div class="header-inner">
-            <div class="exam-title">
-                <h2>{{ $exam->title }}</h2>
-                <p>{{ $exam->subject->name ?? 'Ujian' }} | Durasi: {{ $exam->duration }} menit</p>
+            <div>
+                <h2 style="font-size: 18px; font-weight: 700;">{{ $exam->title }}</h2>
+                <p style="font-size: 12px; color: #6b7280;">{{ $exam->subject->name ?? 'Ujian' }} | Durasi: {{ $exam->duration }} menit</p>
             </div>
-            <div class="timer-box" id="timerBox">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <div class="timer-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                     <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
                     <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5zm0 2.25a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" clip-rule="evenodd" />
                 </svg>
@@ -524,10 +454,7 @@
         </div>
     </div>
 
-    <!-- KONTEN UTAMA -->
     <div class="main-content">
-
-        <!-- BAGIAN SOAL -->
         <div class="question-section">
             <div class="question-card">
                 <div class="question-header">
@@ -539,9 +466,7 @@
                         </svg>
                     </button>
                 </div>
-
                 <div id="optionsArea" class="options-container"></div>
-
                 <div class="question-nav">
                     <button class="btn-nav btn-prev" id="prevBtn">◀ Sebelumnya</button>
                     <button class="btn-nav btn-next" id="nextBtn">Selanjutnya ▶</button>
@@ -549,32 +474,16 @@
             </div>
         </div>
 
-        <!-- BAGIAN NAVIGASI -->
         <div class="nav-section">
             <div class="nav-card">
                 <h3 style="margin-bottom: 16px; font-size: 16px;">📋 Navigasi Soal</h3>
-
                 <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-label">📊 Total Soal</span>
-                        <span class="stat-value" id="totalQuestions">{{ $questions->count() }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">✅ Sudah Dikerjakan</span>
-                        <span class="stat-value answered" id="answeredCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">⭐ Ditandai</span>
-                        <span class="stat-value bookmarked" id="bookmarkedCount">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">⏳ Belum Dikerjakan</span>
-                        <span class="stat-value unanswered" id="unansweredCount">{{ $questions->count() }}</span>
-                    </div>
+                    <div class="stat-item"><span class="stat-label">📊 Total Soal</span><span class="stat-value" id="totalQuestions">{{ $questions->count() }}</span></div>
+                    <div class="stat-item"><span class="stat-label">✅ Sudah Dikerjakan</span><span class="stat-value answered" id="answeredCount">0</span></div>
+                    <div class="stat-item"><span class="stat-label">⭐ Ditandai</span><span class="stat-value bookmarked" id="bookmarkedCount">0</span></div>
+                    <div class="stat-item"><span class="stat-label">⏳ Belum Dikerjakan</span><span class="stat-value unanswered" id="unansweredCount">{{ $questions->count() }}</span></div>
                 </div>
-
                 <div id="navGrid" class="nav-grid"></div>
-
                 <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
                     @csrf
                     <input type="hidden" name="question_order" id="questionOrderInput">
@@ -585,11 +494,11 @@
     </div>
 </div>
 
-<!-- MODAL KONFIRMASI SELESAI -->
+<!-- MODAL -->
 <div class="modal" id="finishModal">
     <div class="modal-content">
         <h3>✅ Selesaikan Ujian?</h3>
-        <p id="modalMessage" style="color: #6b7280; margin-bottom: 20px;"></p>
+        <p id="modalMessage" style="margin-bottom: 20px; color: #6b7280;"></p>
         <div class="modal-buttons">
             <button style="background: #e5e7eb;" onclick="closeModal()">Batal</button>
             <button style="background: #ef4444; color: white;" onclick="submitExam()">Ya, Selesai</button>
@@ -597,118 +506,77 @@
     </div>
 </div>
 
-<!-- TOAST PERINGATAN -->
 <div class="toast-warning" id="toastWarning">⚠️ Dilarang keluar dari ujian!</div>
 
 <script>
-    // ==================== FULL SCREEN TOTAL (DESKTOP + HP) ====================
-
+    // ==================== FULL SCREEN ====================
     let examActive = false;
     let isSubmitting = false;
-    let isFinished = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
+    let isFinished = false;
     let fullScreenInterval = null;
+    let timerInterval = null;
 
-    // Fungsi request full screen (MULTI METHOD)
+    // Cek apakah ujian sudah selesai dari localStorage
+    const savedFinished = localStorage.getItem(`exam_{{ $exam->id }}_finished`);
+    if (savedFinished === 'true') {
+        isFinished = true;
+    }
+
     function enterFullscreen() {
         const docEl = document.documentElement;
+        if (docEl.requestFullscreen) docEl.requestFullscreen();
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+        else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
 
-        // Chrome, Firefox, Edge, Safari, Android WebView
-        if (docEl.requestFullscreen) {
-            docEl.requestFullscreen();
-        } else if (docEl.webkitRequestFullscreen) { // Safari, Chrome Android lama
-            docEl.webkitRequestFullscreen();
-        } else if (docEl.msRequestFullscreen) { // IE/Edge
-            docEl.msRequestFullscreen();
-        } else if (docEl.mozRequestFullScreen) { // Firefox
-            docEl.mozRequestFullScreen();
-        }
-
-        // Untuk Kodular WebView (custom)
         if (window.Android && window.Android.enterFullscreen) {
             window.Android.enterFullscreen();
         }
-
-        console.log('Fullscreen requested');
     }
 
-    // Fungsi keluar full screen (TIDAK AKAN DIGUNAKAN SELAMA UJIAN)
-    function exitFullscreen() {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        }
-    }
-
-    // Cek status full screen - jika keluar, paksa masuk lagi
     function enforceFullscreen() {
         if (!examActive || isSubmitting || isFinished) return;
-
-        const isFullscreen = document.fullscreenElement ||
-                            document.webkitFullscreenElement ||
-                            document.msFullscreenElement;
-
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
         if (!isFullscreen) {
-            console.log('Fullscreen lost! Re-entering...');
             showToast('🔒 Mode layar penuh diaktifkan kembali!');
             setTimeout(() => enterFullscreen(), 100);
         }
     }
 
-    // Event listener perubahan full screen
     document.addEventListener('fullscreenchange', enforceFullscreen);
     document.addEventListener('webkitfullscreenchange', enforceFullscreen);
-    document.addEventListener('mozfullscreenchange', enforceFullscreen);
 
-    // Toast notifikasi
-    function showToast(message) {
+    function showToast(msg) {
         const toast = document.getElementById('toastWarning');
-        toast.textContent = message || '⚠️ Dilarang keluar dari ujian!';
+        toast.textContent = msg || '⚠️ Dilarang keluar dari ujian!';
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
     // ==================== TOMBOL MULAI ====================
     document.getElementById('startBtn').addEventListener('click', function() {
-        // 1. Masuk full screen
         enterFullscreen();
-
-        // 2. Sembunyikan start screen
         document.getElementById('startScreen').style.display = 'none';
-
-        // 3. Tampilkan ujian
         document.getElementById('examWrapper').style.display = 'block';
-
-        // 4. Aktifkan mode ujian
         examActive = true;
 
-        // 5. Mulai interval pengecekan full screen (setiap 2 detik)
         if (fullScreenInterval) clearInterval(fullScreenInterval);
         fullScreenInterval = setInterval(enforceFullscreen, 2000);
 
-        // 6. Inisialisasi ujian
         initExam();
 
-        // 7. Catat waktu mulai
-        if (!localStorage.getItem(`exam_{{ $exam->id }}_start_time`)) {
-            localStorage.setItem(`exam_{{ $exam->id }}_start_time`, new Date().toISOString());
-        }
-
-        console.log('✅ Ujian dimulai - Fullscreen mode aktif');
+        console.log('✅ Ujian dimulai');
     });
 
     // ==================== VARIABEL UJIAN ====================
     const EXAM_ID = {{ $exam->id }};
+    const DURATION_MINUTES = {{ $exam->duration }};
     let originalQuestions = @json($questionsData);
     let questions = [];
     let currentIndex = 0;
     let answers = {};
     let bookmarked = {};
-    let timerInterval = null;
 
-    // Fungsi acak array (Fisher-Yates)
+    // Fungsi acak
     function shuffle(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -717,16 +585,13 @@
         return arr;
     }
 
-    // Acak soal dan opsi
     function randomizeQuestions() {
         let shuffled = shuffle([...originalQuestions]);
-
         shuffled = shuffled.map(q => {
             if (q.type === 'pilihan_ganda' && q.options) {
                 let opts = [];
                 if (Array.isArray(q.options)) opts = [...q.options];
                 else if (typeof q.options === 'object') opts = Object.values(q.options);
-
                 const shuffledOpts = shuffle([...opts]);
                 const newOpts = {};
                 const keys = ['A', 'B', 'C', 'D'];
@@ -737,16 +602,83 @@
             }
             return q;
         });
-
         return shuffled;
     }
 
-    // Inisialisasi ujian
+    // ==================== TIMER YANG BENAR ====================
+    let startTime = null;
+    let endTime = null;
+
+    function initTimer() {
+        // Ambil waktu mulai dari localStorage
+        const savedStartTime = localStorage.getItem(`exam_${EXAM_ID}_start_time`);
+
+        if (savedStartTime && !isFinished) {
+            startTime = new Date(savedStartTime);
+        } else {
+            startTime = new Date();
+            localStorage.setItem(`exam_${EXAM_ID}_start_time`, startTime.toISOString());
+        }
+
+        // Hitung waktu berakhir
+        endTime = new Date(startTime.getTime() + (DURATION_MINUTES * 60 * 1000));
+
+        console.log('Timer initialized:', {
+            startTime: startTime.toLocaleTimeString(),
+            endTime: endTime.toLocaleTimeString(),
+            durationMinutes: DURATION_MINUTES
+        });
+    }
+
+    function updateTimerDisplay() {
+        if (isSubmitting || isFinished) return;
+
+        const now = new Date();
+        const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+
+        const hours = String(Math.floor(remaining / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+        const seconds = String(remaining % 60).padStart(2, '0');
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        if (timerDisplay) {
+            timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Ubah warna timer jika waktu hampir habis
+        const timerBox = document.querySelector('.timer-box');
+        if (remaining <= 300 && remaining > 0) { // 5 menit terakhir
+            timerBox.style.background = '#dc2626';
+            timerBox.style.animation = 'pulse 1s infinite';
+        } else if (remaining <= 600) { // 10 menit terakhir
+            timerBox.style.background = '#ea580c';
+        } else {
+            timerBox.style.background = '#ef4444';
+            timerBox.style.animation = 'none';
+        }
+
+        // Jika waktu habis
+        if (remaining <= 0 && !isSubmitting && !isFinished) {
+            console.log('⏰ WAKTU HABIS! Mengirim ujian...');
+            clearInterval(timerInterval);
+            alert('⏰ WAKTU HABIS! Ujian akan diselesaikan.');
+            document.getElementById('submitForm').submit();
+        }
+    }
+
+    function startTimer() {
+        initTimer();
+        updateTimerDisplay();
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimerDisplay, 1000);
+        console.log('Timer started, interval ID:', timerInterval);
+    }
+
+    // ==================== INISIALISASI UJIAN ====================
     function initExam() {
         const forceExit = localStorage.getItem(`exam_${EXAM_ID}_force_exit`);
         const savedOrder = localStorage.getItem(`exam_${EXAM_ID}_question_order`);
 
-        // Cek perlu reset
         if (forceExit === 'true' && !isFinished) {
             resetExam();
             return;
@@ -765,10 +697,9 @@
             localStorage.setItem(`exam_${EXAM_ID}_question_order`, JSON.stringify(questions.map(q => q.id)));
         }
 
-        // Bersihkan flag force exit
         localStorage.removeItem(`exam_${EXAM_ID}_force_exit`);
 
-        // Load jawaban tersimpan
+        // Load jawaban
         const savedAnswers = localStorage.getItem(`exam_${EXAM_ID}_answers`);
         if (savedAnswers) {
             try {
@@ -787,33 +718,32 @@
 
         // Update UI
         document.getElementById('totalQuestions').textContent = questions.length;
+        document.getElementById('unansweredCount').textContent = questions.length;
         buildNavGrid();
         renderQuestion(0);
         updateStats();
+
+        // MULAI TIMER
         startTimer();
+
+        console.log('Ujian siap, total soal:', questions.length);
     }
 
-    // Reset ujian
     function resetExam() {
-        // Hapus semua data
         const keys = [`exam_${EXAM_ID}_answers`, `exam_${EXAM_ID}_bookmarks`, `exam_${EXAM_ID}_finished`,
                       `exam_${EXAM_ID}_force_exit`, `exam_${EXAM_ID}_exit_count`, `exam_${EXAM_ID}_question_order`,
                       `exam_${EXAM_ID}_start_time`];
         keys.forEach(k => localStorage.removeItem(k));
 
-        // Reset variabel
         answers = {};
         bookmarked = {};
-
-        // Acak ulang soal
         questions = randomizeQuestions();
         localStorage.setItem(`exam_${EXAM_ID}_question_order`, JSON.stringify(questions.map(q => q.id)));
 
-        // Reload halaman setelah reset
         setTimeout(() => window.location.reload(), 500);
     }
 
-    // Render soal
+    // ==================== RENDER SOAL ====================
     function renderQuestion(index) {
         if (index < 0 || index >= questions.length) return;
 
@@ -901,27 +831,21 @@
 
     function updateBookmarkBtn() {
         const q = questions[currentIndex];
-        const isBookmarked = bookmarked[q.id];
         const btn = document.getElementById('bookmarkBtn');
-
-        if (isBookmarked) {
+        if (bookmarked[q.id]) {
             btn.classList.add('active');
             btn.querySelector('svg').setAttribute('fill', '#f59e0b');
-            btn.querySelector('svg').setAttribute('stroke', '#f59e0b');
         } else {
             btn.classList.remove('active');
             btn.querySelector('svg').setAttribute('fill', 'none');
-            btn.querySelector('svg').setAttribute('stroke', 'currentColor');
         }
     }
 
     function toggleBookmark() {
         const q = questions[currentIndex];
-        if (bookmarked[q.id]) {
-            delete bookmarked[q.id];
-        } else {
-            bookmarked[q.id] = true;
-        }
+        if (bookmarked[q.id]) delete bookmarked[q.id];
+        else bookmarked[q.id] = true;
+
         localStorage.setItem(`exam_${EXAM_ID}_bookmarks`, JSON.stringify(bookmarked));
         updateBookmarkBtn();
         updateNavBox(currentIndex);
@@ -975,11 +899,10 @@
     function updateNavActive(i) {
         const grid = document.getElementById('navGrid');
         for (let idx = 0; idx < grid.children.length; idx++) {
-            const btn = grid.children[idx];
             if (idx === i) {
-                btn.style.background = '#4f46e5';
-                btn.style.color = 'white';
-                btn.style.borderColor = '#4f46e5';
+                grid.children[idx].style.background = '#4f46e5';
+                grid.children[idx].style.color = 'white';
+                grid.children[idx].style.borderColor = '#4f46e5';
             } else {
                 updateNavBox(idx);
             }
@@ -1001,59 +924,47 @@
         document.getElementById('bookmarkedCount').textContent = bookmarkedCount;
     }
 
-    // TIMER
-    function startTimer() {
-        const durationMinutes = {{ $exam->duration }};
-        let startTime = localStorage.getItem(`exam_${EXAM_ID}_start_time`);
-        if (!startTime) {
-            startTime = new Date().toISOString();
-            localStorage.setItem(`exam_${EXAM_ID}_start_time`, startTime);
-        }
-
-        const endTime = new Date(new Date(startTime).getTime() + (durationMinutes * 60 * 1000));
-
-        function updateTimer() {
-            if (isSubmitting || isFinished) return;
-            const remaining = Math.max(0, Math.floor((endTime - new Date()) / 1000));
-            const h = String(Math.floor(remaining / 3600)).padStart(2, '0');
-            const m = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
-            const s = String(remaining % 60).padStart(2, '0');
-            document.getElementById('timerDisplay').textContent = `${h}:${m}:${s}`;
-
-            if (remaining <= 0) {
-                clearInterval(timerInterval);
-                alert('⏰ Waktu habis! Ujian akan diselesaikan.');
-                document.getElementById('submitForm').submit();
-            }
-        }
-
-        updateTimer();
-        timerInterval = setInterval(updateTimer, 1000);
-    }
-
-    // MODAL
-    function openModal() {
+    // ==================== MODAL ====================
+    window.openModal = function() {
         const answered = Object.keys(answers).filter(id => answers[id] && answers[id].trim() !== '').length;
-        document.getElementById('modalMessage').innerHTML = `Soal terjawab: ${answered}/${questions.length}<br>${questions.length - answered > 0 ? '⚠️ Masih ada ' + (questions.length - answered) + ' soal belum dijawab' : '✅ Semua soal sudah dijawab'}`;
+        const msg = `Soal terjawab: ${answered}/${questions.length}<br>${questions.length - answered > 0 ? '⚠️ Masih ada ' + (questions.length - answered) + ' soal belum dijawab' : '✅ Semua soal sudah dijawab'}`;
+        document.getElementById('modalMessage').innerHTML = msg;
         document.getElementById('finishModal').style.display = 'flex';
-    }
+    };
 
-    function closeModal() {
+    window.closeModal = function() {
         document.getElementById('finishModal').style.display = 'none';
-    }
+    };
 
-    function submitExam() {
+    window.submitExam = function() {
         closeModal();
         isSubmitting = true;
         isFinished = true;
-        localStorage.setItem(`exam_${EXAM_ID}_finished`, 'true');
+        if (timerInterval) clearInterval(timerInterval);
         if (fullScreenInterval) clearInterval(fullScreenInterval);
+        localStorage.setItem(`exam_${EXAM_ID}_finished`, 'true');
         document.getElementById('submitForm').submit();
-    }
+    };
+
+    // ==================== EVENT LISTENERS ====================
+    document.getElementById('prevBtn').addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderQuestion(currentIndex);
+        }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            renderQuestion(currentIndex);
+        }
+    });
+
+    document.getElementById('bookmarkBtn').addEventListener('click', toggleBookmark);
+    document.getElementById('finishBtn').addEventListener('click', openModal);
 
     // ==================== KEAMANAN ====================
-
-    // Cegah tombol back (History API)
     (function blockBackButton() {
         for (let i = 0; i < 50; i++) history.pushState(null, null, location.href);
         window.addEventListener('popstate', function(e) {
@@ -1065,7 +976,6 @@
         });
     })();
 
-    // Cegah gesture back (swipe dari kiri)
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
     document.addEventListener('touchend', e => {
@@ -1075,15 +985,13 @@
         }
     });
 
-    // Cegah refresh/tutup
     window.addEventListener('beforeunload', e => {
         if (examActive && !isSubmitting && !isFinished) {
             e.preventDefault();
-            e.returnValue = '⚠️ UJIAN SEDANG BERLANGSUNG! Jangan keluar!';
+            e.returnValue = '⚠️ UJIAN SEDANG BERLANGSUNG!';
         }
     });
 
-    // Cegah menu konteks (klik kanan)
     document.addEventListener('contextmenu', e => {
         if (examActive && !isSubmitting && !isFinished) {
             e.preventDefault();
@@ -1091,7 +999,6 @@
         }
     });
 
-    // Cegah shortcut keyboard berbahaya
     document.addEventListener('keydown', e => {
         if (!examActive || isSubmitting || isFinished) return;
 
@@ -1112,7 +1019,6 @@
             return;
         }
 
-        // Navigasi panah kiri/kanan tetap diizinkan
         if (e.key === 'ArrowLeft' && currentIndex > 0) {
             currentIndex--;
             renderQuestion(currentIndex);
@@ -1122,7 +1028,6 @@
         }
     });
 
-    // Deteksi minimize app
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && examActive && !isSubmitting && !isFinished) {
             localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
@@ -1130,7 +1035,6 @@
         }
     });
 
-    // Override untuk Kodular
     if (window.Android) {
         window.Android.onBackPressed = () => {
             if (examActive && !isSubmitting && !isFinished) {
@@ -1141,25 +1045,12 @@
         };
     }
 
-    // Event listeners UI
-    document.getElementById('prevBtn').addEventListener('click', () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            renderQuestion(currentIndex);
-        }
-    });
+    // Animasi pulse untuk timer
+    const style = document.createElement('style');
+    style.textContent = `@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }`;
+    document.head.appendChild(style);
 
-    document.getElementById('nextBtn').addEventListener('click', () => {
-        if (currentIndex < questions.length - 1) {
-            currentIndex++;
-            renderQuestion(currentIndex);
-        }
-    });
-
-    document.getElementById('bookmarkBtn').addEventListener('click', toggleBookmark);
-    document.getElementById('finishBtn').addEventListener('click', openModal);
-
-    console.log('✅ Mode Ujian Super Aman siap - Fullscreen Desktop + HP');
+    console.log('✅ Mode Ujian Super Aman siap - Timer berfungsi dengan baik');
 </script>
 </body>
 </html>
