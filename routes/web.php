@@ -16,6 +16,7 @@ use App\Http\Controllers\Guru\HasilController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ExamController as SiswaExamController;
 use App\Http\Controllers\Guru\ProfilController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
@@ -156,3 +157,73 @@ Route::post('/siswa/ujian/{examId}/reset', function ($examId) {
 
     return response()->json(['status' => 'reset']);
 })->name('siswa.exam.reset');
+
+
+
+
+// Full reset endpoint
+Route::post('/siswa/ujian/{examId}/full-reset', function ($examId) {
+    try {
+        $userId = Auth::id();
+
+        // Hapus semua jawaban dari database
+        DB::table('exam_answers')
+            ->where('exam_id', $examId)
+            ->where('user_id', $userId)
+            ->delete();
+
+        // Reset exam_result
+        DB::table('exam_results')
+            ->where('exam_id', $examId)
+            ->where('user_id', $userId)
+            ->update([
+                'answers' => null,
+                'score' => null,
+                'finished_at' => null,
+                'started_at' => now() // Reset waktu mulai
+            ]);
+
+        Log::info('Full reset executed', [
+            'exam_id' => $examId,
+            'user_id' => $userId
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Exam reset complete']);
+    } catch (\Exception $e) {
+        Log::error('Full reset failed: ' . $e->getMessage());
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+})->name('siswa.exam.full-reset');
+
+// Save answer endpoint
+Route::post('/siswa/ujian/{examId}/save-answer', function ($examId) {
+    try {
+        $data = request()->validate([
+            'question_id' => 'required|integer',
+            'answer' => 'nullable|string'
+        ]);
+
+        DB::table('exam_answers')->updateOrInsert(
+            [
+                'exam_id' => $examId,
+                'question_id' => $data['question_id'],
+                'user_id' => Auth::id()
+            ],
+            ['answer' => $data['answer'], 'updated_at' => now()]
+        );
+
+        return response()->json(['status' => 'saved']);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error'], 500);
+    }
+})->name('siswa.exam.save-answer');
+
+// Force exit logging
+Route::post('/siswa/ujian/{examId}/force-exit', function ($examId) {
+    Log::warning('Force exit detected', [
+        'exam_id' => $examId,
+        'user_id' => Auth::id(),
+        'exit_count' => request()->input('exit_count')
+    ]);
+    return response()->json(['status' => 'logged']);
+})->name('siswa.exam.force-exit');
