@@ -2,18 +2,18 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ujian: {{ $exam->title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* RESET TOTAL - TANPA SATUPUN ELEMEN YANG TERLIHAT SELAIN UJIAN */
+        /* RESET TOTAL */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* HILANGKAN SEMUA ELEMEN YANG TIDAK PERLU */
+        /* FULL SCREEN CSS - Menutupi seluruh layar */
         html, body {
             width: 100%;
             height: 100%;
@@ -26,12 +26,12 @@
             background: #f3f4f6;
         }
 
-        /* HILANGKAN SCROLLBAR */
+        /* Sembunyikan scrollbar */
         body::-webkit-scrollbar {
             display: none;
         }
 
-        /* CONTAINER UTAMA FULL SCREEN TANPA PADDING/MARGIN */
+        /* Container utama FULL */
         .exam-container {
             position: fixed;
             top: 0;
@@ -44,7 +44,60 @@
             background: #f3f4f6;
         }
 
-        /* HEADER LANGSUNG DIBAWAH FULL SCREEN */
+        /* START SCREEN - Layar pembuka untuk trigger full screen */
+        #startScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            backdrop-filter: blur(0px);
+        }
+
+        #startScreen h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        #startScreen p {
+            font-size: 16px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            padding: 0 20px;
+        }
+
+        #startExamBtn {
+            padding: 16px 48px;
+            background: white;
+            color: #4f46e5;
+            border: none;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #startExamBtn:active {
+            transform: scale(0.97);
+        }
+
+        /* Konten ujian - AWALNYA DISEMBUNYIKAN */
+        #examContent {
+            display: none;
+        }
+
+        /* Header */
         .exam-header {
             position: sticky;
             top: 0;
@@ -54,13 +107,7 @@
             padding: 12px 16px;
         }
 
-        /* HILANGKAN SEMUA ELEMEN KEAMANAN YANG TIDAK PERLU */
-        #securityWarning, #blockOverlay, #resetOverlay, .top-security-bar,
-        #fullscreenNotification, .security-badge {
-            display: none !important;
-        }
-
-        /* TAMPILAN TIMER YANG MINIMALIS */
+        /* Timer box */
         .timer-box {
             display: flex;
             align-items: center;
@@ -72,7 +119,7 @@
             font-weight: bold;
         }
 
-        /* NAVIGASI GRID YANG RESPONSIF */
+        /* Navigasi grid */
         .nav-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -94,125 +141,250 @@
             transition: all 0.2s;
         }
 
-        /* PASTIKAN TIDAK ADA YANG OVERFLOW */
+        /* Container responsif */
         .max-w-7xl {
             max-width: 1280px;
             margin: 0 auto;
             padding: 16px;
         }
+
+        /* Opsi jawaban */
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-item:hover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+
+        /* Modal konfirmasi selesai */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 200000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 200001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="exam-container" id="examContainer">
-        <!-- HEADER TANPA ELEMEN TAMBAHAN -->
-        <div class="exam-header">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div>
-                    <h1 style="font-size: 18px; font-weight: bold; color: #111827;">{{ $exam->title }}</h1>
-                    <p style="font-size: 12px; color: #6b7280;">{{ $exam->subject->name ?? '-' }} | {{ $exam->duration }} menit</p>
-                </div>
-                <div class="timer-box" id="timerBox">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-                        <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                        <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5zm0 2.25a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" clip-rule="evenodd" />
-                    </svg>
-                    <span id="timerDisplay" style="font-family: monospace; font-size: 18px; font-weight: 600;">00:00:00</span>
-                </div>
-            </div>
-        </div>
+    <!-- START SCREEN - Untuk trigger full screen -->
+    <div id="startScreen">
+        <h1>📱 {{ $exam->title }}</h1>
+        <p>Mode ujian aman dengan layar penuh<br>Jangan keluar dari aplikasi selama ujian berlangsung</p>
+        <button id="startExamBtn">🚀 MULAI UJIAN</button>
+        <p style="position: absolute; bottom: 30px; font-size: 12px; opacity: 0.6;">Sistem akan masuk ke mode layar penuh</p>
+    </div>
 
-        <!-- KONTEN UTAMA -->
-        <div class="max-w-7xl">
-            <div style="display: flex; flex-direction: column; gap: 24px;">
-
-                <!-- KOLOM SOAL -->
-                <div style="flex: 1;">
-                    <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <div style="margin-bottom: 20px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
-                                <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                                    <span id="currentNumber" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #4f46e5; color: white; font-weight: bold; border-radius: 12px; font-size: 18px;">1</span>
-                                    <h2 id="questionText" style="flex: 1; font-size: 18px; font-weight: 600; color: #111827;">Memuat soal...</h2>
-                                </div>
-                                <button id="bookmarkBtn" type="button" style="width: 40px; height: 40px; border: 2px solid #e5e7eb; border-radius: 12px; background: transparent; display: flex; align-items: center; justify-content: center;">
-                                    <svg id="bookmarkIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: #9ca3af;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div id="optionsArea" style="display: flex; flex-direction: column; gap: 12px;"></div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; padding-top: 20px; margin-top: 20px; border-top: 1px solid #e5e7eb;">
-                            <button id="prevBtn" style="padding: 10px 24px; border-radius: 12px; background: #e5e7eb; border: none; font-weight: 500;">Soal Sebelumnya</button>
-                            <button id="nextBtn" style="padding: 10px 24px; border-radius: 12px; background: #4f46e5; color: white; border: none; font-weight: 500;">Soal Selanjutnya</button>
-                        </div>
+    <!-- KONTEN UJIAN (AWALNYA TERSEMBUNYI) -->
+    <div id="examContent">
+        <div class="exam-container" id="examContainer">
+            <!-- HEADER -->
+            <div class="exam-header">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h1 style="font-size: 18px; font-weight: bold; color: #111827;">{{ $exam->title }}</h1>
+                        <p style="font-size: 12px; color: #6b7280;">{{ $exam->subject->name ?? '-' }} | {{ $exam->duration }} menit</p>
+                    </div>
+                    <div class="timer-box" id="timerBox">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                            <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                            <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5zm0 2.25a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" clip-rule="evenodd" />
+                        </svg>
+                        <span id="timerDisplay" style="font-family: monospace; font-size: 18px; font-weight: 600;">00:00:00</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- SIDEBAR NAVIGASI -->
-                <div style="width: 100%;">
-                    <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">Navigasi Soal</h3>
+            <!-- KONTEN UTAMA -->
+            <div class="max-w-7xl">
+                <div style="display: flex; flex-direction: column; gap: 24px;">
 
-                        <div style="background: #f9fafb; border-radius: 12px; padding: 12px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-                                <span style="color: #4b5563;">Total Soal:</span>
-                                <span id="totalQuestions" style="font-weight: 600;">{{ $questions->count() }}</span>
+                    <!-- KOLOM SOAL -->
+                    <div style="flex: 1;">
+                        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <div style="margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                        <span id="currentNumber" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #4f46e5; color: white; font-weight: bold; border-radius: 12px; font-size: 18px;">1</span>
+                                        <h2 id="questionText" style="flex: 1; font-size: 18px; font-weight: 600; color: #111827;">Memuat soal...</h2>
+                                    </div>
+                                    <button id="bookmarkBtn" type="button" style="width: 40px; height: 40px; border: 2px solid #e5e7eb; border-radius: 12px; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                        <svg id="bookmarkIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: #9ca3af;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div id="optionsArea" style="display: flex; flex-direction: column; gap: 12px;"></div>
                             </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-                                <span style="color: #16a34a;">Sudah Dikerjakan:</span>
-                                <span id="answeredCount" style="font-weight: 600; color: #16a34a;">0</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
-                                <span style="color: #ca8a04;">Ditandai:</span>
-                                <span id="bookmarkedCount" style="font-weight: 600; color: #ca8a04;">0</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                                <span style="color: #4b5563;">Belum Dikerjakan:</span>
-                                <span id="unansweredCount" style="font-weight: 600;">{{ $questions->count() }}</span>
+
+                            <div style="display: flex; justify-content: space-between; padding-top: 20px; margin-top: 20px; border-top: 1px solid #e5e7eb;">
+                                <button id="prevBtn" style="padding: 10px 24px; border-radius: 12px; background: #e5e7eb; border: none; font-weight: 500; cursor: pointer;">← Soal Sebelumnya</button>
+                                <button id="nextBtn" style="padding: 10px 24px; border-radius: 12px; background: #4f46e5; color: white; border: none; font-weight: 500; cursor: pointer;">Soal Selanjutnya →</button>
                             </div>
                         </div>
+                    </div>
 
-                        <div id="navGrid" class="nav-grid"></div>
+                    <!-- SIDEBAR NAVIGASI -->
+                    <div style="width: 100%;">
+                        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">Navigasi Soal</h3>
 
-                        <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
-                            @csrf
-                            <input type="hidden" name="question_order" id="questionOrderInput">
-                            <button type="button" id="finishBtn" style="width: 100%; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 600; margin-top: 16px;">
-                                Selesai Ujian
-                            </button>
-                        </form>
+                            <div style="background: #f9fafb; border-radius: 12px; padding: 12px; margin-bottom: 20px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+                                    <span style="color: #4b5563;">Total Soal:</span>
+                                    <span id="totalQuestions" style="font-weight: 600;">{{ $questions->count() }}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+                                    <span style="color: #16a34a;">Sudah Dikerjakan:</span>
+                                    <span id="answeredCount" style="font-weight: 600; color: #16a34a;">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+                                    <span style="color: #ca8a04;">Ditandai:</span>
+                                    <span id="bookmarkedCount" style="font-weight: 600; color: #ca8a04;">0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                    <span style="color: #4b5563;">Belum Dikerjakan:</span>
+                                    <span id="unansweredCount" style="font-weight: 600;">{{ $questions->count() }}</span>
+                                </div>
+                            </div>
+
+                            <div id="navGrid" class="nav-grid"></div>
+
+                            <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
+                                @csrf
+                                <input type="hidden" name="question_order" id="questionOrderInput">
+                                <button type="button" id="finishBtn" style="width: 100%; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 600; margin-top: 16px; cursor: pointer;">
+                                    ✅ Selesai Ujian
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // ============ FULL SCREEN FORCE (TANPA ELEMEN TAMBAHAN) ============
+    <!-- MODAL KONFIRMASI -->
+    <div id="finishModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="font-size: 20px; margin-bottom: 16px;">Selesai Ujian?</h3>
+            <p id="modalMessage" style="margin-bottom: 24px; color: #6b7280;"></p>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="hideFinishModal()" style="flex: 1; padding: 12px; background: #e5e7eb; border: none; border-radius: 12px; font-weight: 500;">Batal</button>
+                <button onclick="confirmFinish()" style="flex: 1; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 12px; font-weight: 500;">Selesai</button>
+            </div>
+        </div>
+    </div>
 
-        // Paksa full screen saat halaman dimuat
-        function forceFullScreen() {
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Memproses...</p>
+    </div>
+
+    <script>
+        // ============ FULL SCREEN ANDROID - BEKERJA 100% ============
+
+        // Variabel
+        let isFullScreen = false;
+        let isSubmittingExam = false;
+        let hasFinishedExam = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
+        let examStarted = false;
+
+        // Fungsi untuk meminta full screen (HARUS melalui user gesture)
+        function requestFullScreen() {
             const docEl = document.documentElement;
 
+            // Coba berbagai metode
             if (docEl.requestFullscreen) {
-                docEl.requestFullscreen().catch(err => {
-                    console.log('Full screen error:', err);
-                });
+                docEl.requestFullscreen();
             } else if (docEl.webkitRequestFullscreen) {
                 docEl.webkitRequestFullscreen();
             } else if (docEl.msRequestFullscreen) {
                 docEl.msRequestFullscreen();
             }
+
+            // Untuk Android WebView
+            if (window.Android && window.Android.requestFullscreen) {
+                window.Android.requestFullscreen();
+            }
+
+            isFullScreen = true;
         }
 
-        // Deteksi jika keluar dari full screen - langsung kembali
+        // Fungsi keluar full screen (tidak akan digunakan selama ujian)
+        function exitFullScreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+
+        // Deteksi perubahan full screen - jika keluar, paksa kembali
         function detectFullScreenExit() {
-            if (!document.fullscreenElement && !isSubmittingExam && !hasFinishedExam) {
+            const isCurrentlyFullScreen = document.fullscreenElement ||
+                                        document.webkitFullscreenElement ||
+                                        document.msFullscreenElement;
+
+            if (!isCurrentlyFullScreen && examStarted && !isSubmittingExam && !hasFinishedExam) {
+                console.log('Keluar dari full screen, memaksa kembali...');
                 setTimeout(() => {
-                    forceFullScreen();
+                    requestFullScreen();
                 }, 100);
             }
         }
@@ -220,24 +392,59 @@
         // Pasang event listener untuk full screen change
         document.addEventListener('fullscreenchange', detectFullScreenExit);
         document.addEventListener('webkitfullscreenchange', detectFullScreenExit);
+        document.addEventListener('mozfullscreenchange', detectFullScreenExit);
 
-        // Paksa full screen saat load
-        window.addEventListener('load', function() {
-            setTimeout(forceFullScreen, 100);
+        // ============ SCRIPT UNTUK KODULAR (IMMERSIVE MODE) ============
+        function hideSystemUI() {
+            // Untuk Android WebView - menyembunyikan navigation bar
+            if (window.Android && window.Android.hideSystemUI) {
+                window.Android.hideSystemUI();
+            }
 
-            // Cek setiap 3 detik untuk memastikan tetap full screen
+            // Menggunakan CSS untuk menyembunyikan scrollbar
+            document.body.style.overflow = 'hidden';
+
+            // Untuk browser modern
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(() => {});
+            }
+        }
+
+        // ============ TOMBOL MULAI - TRIGGER FULL SCREEN ============
+        document.getElementById('startExamBtn').addEventListener('click', function() {
+            // 1. Masuk ke full screen
+            requestFullScreen();
+
+            // 2. Sembunyikan system UI (untuk Kodular)
+            hideSystemUI();
+
+            // 3. Sembunyikan start screen
+            document.getElementById('startScreen').style.display = 'none';
+
+            // 4. Tampilkan konten ujian
+            document.getElementById('examContent').style.display = 'block';
+
+            // 5. Tandai ujian sudah dimulai
+            examStarted = true;
+
+            // 6. Inisialisasi ujian
+            initializeExam();
+
+            // 7. Catat waktu mulai
+            localStorage.setItem(`exam_{{ $exam->id }}_start_time`, new Date().toISOString());
+
+            // 8. Set interval untuk memastikan tetap full screen
             setInterval(() => {
-                if (!document.fullscreenElement && !isSubmittingExam && !hasFinishedExam) {
-                    forceFullScreen();
+                if (examStarted && !isSubmittingExam && !hasFinishedExam) {
+                    const isFS = document.fullscreenElement || document.webkitFullscreenElement;
+                    if (!isFS) {
+                        requestFullScreen();
+                    }
                 }
-            }, 3000);
+            }, 2000);
         });
 
-        // ============ VARIABEL ============
-        let isSubmittingExam = false;
-        let hasFinishedExam = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
-        let isResetting = false;
-
+        // ============ VARIABEL UJIAN ============
         const EXAM_ID = {{ $exam->id }};
         let originalQuestions = @json($questionsData);
         let questions = [];
@@ -245,6 +452,7 @@
         let answers = {};
         let bookmarked = {};
         let questionOrder = [];
+        let timerInterval = null;
 
         // ============ FUNGSI ACAK SOAL ============
         function shuffleArray(array) {
@@ -285,16 +493,12 @@
 
         // ============ RESET TOTAL ============
         async function performFullReset() {
-            if (isResetting) return;
-            isResetting = true;
-
-            console.log('🔄 RESET TOTAL...');
+            document.getElementById('loadingOverlay').style.display = 'flex';
 
             // Hapus semua localStorage
             const keysToRemove = [
                 `exam_${EXAM_ID}_answers`, `exam_${EXAM_ID}_bookmarks`, `exam_${EXAM_ID}_finished`,
                 `exam_${EXAM_ID}_force_exit`, `exam_${EXAM_ID}_exit_time`, `exam_${EXAM_ID}_exit_count`,
-                `exam_${EXAM_ID}_minimize_time`, `exam_${EXAM_ID}_minimize_count`, `exam_${EXAM_ID}_temp_answers`,
                 `exam_${EXAM_ID}_question_order`, `exam_${EXAM_ID}_start_time`
             ];
             keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -319,31 +523,27 @@
             localStorage.setItem(`exam_${EXAM_ID}_question_order`, JSON.stringify(questionOrder));
             document.getElementById('questionOrderInput').value = JSON.stringify(questionOrder);
 
-            // Reset timer
-            localStorage.setItem(`exam_${EXAM_ID}_start_time`, new Date().toISOString());
+            document.getElementById('loadingOverlay').style.display = 'none';
 
-            // Force reload
+            // Reload halaman
             setTimeout(() => {
-                window.location.replace(window.location.href.split('?')[0] + '?reset=' + Date.now());
+                window.location.reload();
             }, 500);
         }
 
         // ============ DETEKSI KELUAR PAKSA ============
         document.addEventListener('visibilitychange', function() {
-            if (document.hidden && !isSubmittingExam && !hasFinishedExam && !isResetting) {
+            if (document.hidden && examStarted && !isSubmittingExam && !hasFinishedExam) {
                 localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
-                fetch(`{{ url('/siswa/ujian') }}/${EXAM_ID}/force-exit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                }).catch(() => {});
             }
         });
 
-        window.addEventListener('load', function() {
+        // ============ INISIALISASI UJIAN ============
+        function initializeExam() {
             const forceExit = localStorage.getItem(`exam_${EXAM_ID}_force_exit`);
             const savedOrder = localStorage.getItem(`exam_${EXAM_ID}_question_order`);
 
-            if (forceExit === 'true' && !hasFinishedExam && !isResetting) {
+            if (forceExit === 'true' && !hasFinishedExam) {
                 performFullReset();
                 return;
             }
@@ -383,7 +583,7 @@
                 } catch(e) {}
             }
 
-            // Inisialisasi UI
+            // Update UI
             document.getElementById('totalQuestions').textContent = questions.length;
             buildNavGrid();
             renderQuestion(0);
@@ -391,8 +591,8 @@
             updateBookmarkedCount();
             startTimer();
 
-            console.log('✅ Ujian siap dengan', questions.length, 'soal');
-        });
+            console.log('✅ Ujian dimulai dengan', questions.length, 'soal');
+        }
 
         // ============ FUNGSI UJIAN ============
         function renderQuestion(index) {
@@ -429,7 +629,7 @@
 
                 optionsList.forEach((option) => {
                     const wrapper = document.createElement('label');
-                    wrapper.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; cursor: pointer; transition: all 0.2s;';
+                    wrapper.className = 'option-item';
 
                     const radio = document.createElement('input');
                     radio.type = 'radio';
@@ -623,7 +823,27 @@
             }
 
             updateTimer();
-            const timerInterval = setInterval(updateTimer, 1000);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // ============ MODAL KONFIRMASI ============
+        function showFinishModal() {
+            const answered = Object.keys(answers).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
+            const unanswered = questions.length - answered;
+            document.getElementById('modalMessage').innerHTML = `Soal terjawab: ${answered}/${questions.length}<br>${unanswered > 0 ? '⚠️ Masih ada ' + unanswered + ' soal belum dijawab' : '✅ Semua soal sudah dijawab'}`;
+            document.getElementById('finishModal').style.display = 'flex';
+        }
+
+        function hideFinishModal() {
+            document.getElementById('finishModal').style.display = 'none';
+        }
+
+        function confirmFinish() {
+            hideFinishModal();
+            isSubmittingExam = true;
+            hasFinishedExam = true;
+            localStorage.setItem(`exam_${EXAM_ID}_finished`, 'true');
+            document.getElementById('submitForm').submit();
         }
 
         // ============ EVENT LISTENERS ============
@@ -642,23 +862,14 @@
         });
 
         document.getElementById('bookmarkBtn').addEventListener('click', toggleBookmark);
-
-        document.getElementById('finishBtn').addEventListener('click', () => {
-            const answered = Object.keys(answers).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
-            if (confirm(`Selesaikan ujian?\n\nTerjawab: ${answered}/${questions.length}`)) {
-                isSubmittingExam = true;
-                hasFinishedExam = true;
-                localStorage.setItem(`exam_${EXAM_ID}_finished`, 'true');
-                document.getElementById('submitForm').submit();
-            }
-        });
+        document.getElementById('finishBtn').addEventListener('click', showFinishModal);
 
         // ============ KEAMANAN ============
         // Cegah tombol back
         (function() {
             for(let i = 0; i < 100; i++) history.pushState(null, null, location.href);
             window.addEventListener('popstate', function(e) {
-                if (!isSubmittingExam && !hasFinishedExam && !isResetting) {
+                if (examStarted && !isSubmittingExam && !hasFinishedExam) {
                     e.preventDefault();
                     for(let i = 0; i < 100; i++) history.pushState(null, null, location.href);
                 }
@@ -669,14 +880,14 @@
         let touchStart = 0;
         document.addEventListener('touchstart', e => { touchStart = e.touches[0].clientX; });
         document.addEventListener('touchend', e => {
-            if (touchStart < 50 && e.changedTouches[0].clientX > 100 && !isSubmittingExam && !hasFinishedExam) {
+            if (touchStart < 50 && e.changedTouches[0].clientX > 100 && examStarted && !isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
             }
         });
 
         // Cegah refresh
         window.addEventListener('beforeunload', e => {
-            if (!isSubmittingExam && !hasFinishedExam && !isResetting) {
+            if (examStarted && !isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
                 e.returnValue = 'Ujian sedang berlangsung!';
             }
@@ -685,12 +896,12 @@
         // Override untuk Kodular
         if (window.Android) {
             window.Android.onBackPressed = () => {
-                if (!isSubmittingExam && !hasFinishedExam) return true;
+                if (examStarted && !isSubmittingExam && !hasFinishedExam) return true;
                 return false;
             };
         }
 
-        console.log('✅ Full screen mode aktif - tanpa elemen tambahan');
+        console.log('✅ Full screen Android mode siap');
     </script>
 </body>
 </html>
