@@ -16,6 +16,7 @@ use App\Http\Controllers\Guru\HasilController;
 use App\Http\Controllers\Siswa\DashboardController as SiswaDashboardController;
 use App\Http\Controllers\Siswa\ExamController as SiswaExamController;
 use App\Http\Controllers\Guru\ProfilController;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
     // Arahkan ke halaman login lokal aplikasi ini
@@ -37,7 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // Rute Siswa (auth-required)
 Route::middleware('auth')->group(function () {
@@ -96,9 +97,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
     Route::put('/users/{user}', [UsersController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
-Route::post('/users/import', [UsersController::class, 'import'])->name('users.import');
-Route::get('/users/template', [UsersController::class, 'downloadTemplate'])->name('users.template');
-Route::get('/users/template-doc', [UsersController::class, 'downloadDocTemplate'])->name('users.template-doc');
+    Route::post('/users/import', [UsersController::class, 'import'])->name('users.import');
+    Route::get('/users/template', [UsersController::class, 'downloadTemplate'])->name('users.template');
+    Route::get('/users/template-doc', [UsersController::class, 'downloadDocTemplate'])->name('users.template-doc');
 
     Route::get('/subjects', [SubjectsController::class, 'index'])->name('subjects');
     Route::post('/subjects', [SubjectsController::class, 'store'])->name('subjects.store');
@@ -115,3 +116,43 @@ Route::get('/users/template-doc', [UsersController::class, 'downloadDocTemplate'
 
     Route::get('/search', [SearchController::class, 'search'])->name('search');
 });
+
+
+// Route untuk mencatat force exit
+Route::post('/siswa/ujian/{examId}/force-exit', function ($examId) {
+    // Catat ke database atau log
+    Log::warning('Force exit detected', [
+        'exam_id' => $examId,
+        'user_id' => Auth::id(),
+        'timestamp' => now()
+    ]);
+
+    // Optional: Simpan ke tabel exam_logs
+    // ExamLog::create([...]);
+
+    return response()->json(['status' => 'logged']);
+})->name('siswa.exam.force-exit');
+
+// Route untuk reset ujian
+Route::post('/siswa/ujian/{examId}/reset', function ($examId) {
+    // Hapus jawaban siswa dari database
+    \App\Models\ExamAnswer::where('exam_id', $examId)
+        ->where('user_id', Auth::id())
+        ->delete();
+
+    // Reset exam_result
+    \App\Models\ExamResult::where('exam_id', $examId)
+        ->where('user_id', Auth::id())
+        ->update([
+            'answers' => null,
+            'score' => null,
+            'finished_at' => null
+        ]);
+
+    Log::info('Exam reset due to force exit', [
+        'exam_id' => $examId,
+        'user_id' => Auth::id()
+    ]);
+
+    return response()->json(['status' => 'reset']);
+})->name('siswa.exam.reset');

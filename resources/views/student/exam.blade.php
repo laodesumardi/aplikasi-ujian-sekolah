@@ -26,7 +26,6 @@
             user-select: none;
         }
 
-        /* Prevent pull-to-refresh */
         body {
             overscroll-behavior-y: contain;
         }
@@ -51,7 +50,6 @@
             user-select: none;
         }
 
-        /* Peringatan floating */
         #securityWarning {
             position: fixed;
             top: 0;
@@ -72,7 +70,6 @@
             transform: translateY(0);
         }
 
-        /* Overlay blokir - TAMPILAN FULL */
         #blockOverlay {
             position: fixed;
             top: 0;
@@ -90,24 +87,23 @@
             padding: 20px;
         }
 
-        /* Loading overlay */
-        #loadingOverlay {
+        #resetOverlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.9);
-            z-index: 9999;
-            display: flex;
+            z-index: 99998;
+            display: none;
             align-items: center;
             justify-content: center;
-            color: white;
             flex-direction: column;
-            gap: 20px;
+            color: white;
+            text-align: center;
+            padding: 20px;
         }
 
-        /* Peringatan di atas semua */
         .top-security-bar {
             position: fixed;
             top: 0;
@@ -120,6 +116,20 @@
             font-size: 10px;
             z-index: 10001;
         }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -127,24 +137,27 @@
         🔒 UJIAN TERKUNCI - JANGAN KELUAR APLIKASI 🔒
     </div>
 
-    <!-- Security Warning -->
     <div id="securityWarning">
         ⚠️ DILARANG KELUAR DARI APLIKASI UJIAN!
     </div>
 
-    <!-- Block Overlay -->
     <div id="blockOverlay">
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         <h2 style="margin: 20px 0 10px; font-size: 24px;">🚫 AKSES DITOLAK!</h2>
         <p style="font-size: 16px; margin-bottom: 10px;">Anda tidak diizinkan keluar dari ujian!</p>
-        <p style="font-size: 14px; color: #ffcccc;">Silakan lanjutkan mengerjakan soal.</p>
         <button onclick="hideBlockOverlayAndReload()" style="margin-top: 30px; padding: 12px 40px; background: #4f46e5; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px;">Kembali ke Ujian</button>
     </div>
 
+    <div id="resetOverlay">
+        <div class="spinner"></div>
+        <h2 style="margin-bottom: 10px;">🔄 MERESET UJIAN...</h2>
+        <p>Terjadi pelanggaran keamanan. Ujian akan dimulai dari awal.</p>
+        <p style="font-size: 14px; margin-top: 20px; color: #ffcccc;">Mohon jangan tinggalkan aplikasi ujian!</p>
+    </div>
+
     <div class="exam-container" id="examContainer">
-        <!-- Header dengan Timer -->
         <header class="sticky top-0 z-50 bg-white shadow-md" style="margin-top: 25px;">
             <div class="flex items-center justify-between px-4 py-3 mx-auto max-w-7xl">
                 <div>
@@ -163,7 +176,6 @@
 
         <div class="px-4 py-6 mx-auto max-w-7xl">
             <div class="flex flex-col gap-6 lg:flex-row">
-                <!-- Question Column -->
                 <div class="flex-1 lg:w-2/3">
                     <div class="p-6 bg-white rounded-lg shadow-lg">
                         <div id="questionArea" class="space-y-6">
@@ -187,7 +199,6 @@
                     </div>
                 </div>
 
-                <!-- Navigation Sidebar -->
                 <div class="lg:w-1/3">
                     <div class="sticky p-6 bg-white rounded-lg shadow-lg top-24">
                         <h3 class="mb-4 text-lg font-bold text-gray-900">Navigasi Soal</h3>
@@ -225,14 +236,149 @@
     </div>
 
     <script>
-        // ============ KEAMANAN TOTAL UNTUK MOBILE ============
-
+        // ============ VARIABEL GLOBAL ============
         let isSubmittingExam = false;
         let hasFinishedExam = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
         let blockCount = 0;
         let backPressCount = 0;
+        let isResetting = false;
 
-        const examId = {{ $exam->id }};
+        const EXAM_ID = {{ $exam->id }};
+
+        // ============ FITUR AUTO-RESET SAAT KELUAR PAKSA ============
+
+        function showResetOverlay(message) {
+            const overlay = document.getElementById('resetOverlay');
+            const messageEl = overlay.querySelector('p:first-of-type');
+            if (messageEl) messageEl.innerHTML = message || 'Terjadi pelanggaran keamanan. Ujian akan dimulai dari awal.';
+            overlay.style.display = 'flex';
+        }
+
+        function hideResetOverlay() {
+            document.getElementById('resetOverlay').style.display = 'none';
+        }
+
+        async function resetExamAndRedirect() {
+            if (isResetting) return;
+            isResetting = true;
+
+            console.log('🔄 Memulai proses reset ujian...');
+            showResetOverlay('🔄 MERESET UJIAN... Menghapus semua jawaban.');
+
+            // Hapus semua data dari localStorage
+            localStorage.removeItem(`exam_${EXAM_ID}_answers`);
+            localStorage.removeItem(`exam_${EXAM_ID}_bookmarks`);
+            localStorage.removeItem(`exam_${EXAM_ID}_finished`);
+            localStorage.removeItem(`exam_${EXAM_ID}_force_exit`);
+            localStorage.removeItem(`exam_${EXAM_ID}_exit_time`);
+            localStorage.removeItem(`exam_${EXAM_ID}_exit_count`);
+            localStorage.removeItem(`exam_${EXAM_ID}_minimize_time`);
+            localStorage.removeItem(`exam_${EXAM_ID}_minimize_count`);
+            localStorage.removeItem(`exam_${EXAM_ID}_temp_answers`);
+
+            // Kirim reset ke server
+            try {
+                await fetch(`{{ url('/siswa/ujian') }}/${EXAM_ID}/reset`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        reason: 'force_exit_detected',
+                        timestamp: new Date().toISOString(),
+                        exit_count: exitCount
+                    })
+                });
+            } catch(e) {
+                console.error('Error sending reset to server:', e);
+            }
+
+            // Tunggu sebentar lalu reload
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        }
+
+        // 1. DETEKSI KELUAR PAKSA (Force Close / Minimize)
+        let exitCount = parseInt(localStorage.getItem(`exam_${EXAM_ID}_exit_count`) || '0');
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && !isSubmittingExam && !hasFinishedExam && !isResetting) {
+                exitCount++;
+                localStorage.setItem(`exam_${EXAM_ID}_exit_count`, exitCount);
+                localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
+                localStorage.setItem(`exam_${EXAM_ID}_exit_time`, new Date().toISOString());
+
+                console.log(`⚠️ Aplikasi diminimize/ditutup (ke-${exitCount}) - Akan reset saat kembali`);
+
+                // Kirim notifikasi ke server
+                fetch(`{{ url('/siswa/ujian') }}/${EXAM_ID}/force-exit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        exit_count: exitCount
+                    })
+                }).catch(() => {});
+            }
+        });
+
+        // 2. CEK SAAT APLIKASI DIBUKA KEMBALI (HALAMAN LOAD/RELOAD)
+        window.addEventListener('load', function() {
+            const forceExit = localStorage.getItem(`exam_${EXAM_ID}_force_exit`);
+            const exitTime = localStorage.getItem(`exam_${EXAM_ID}_exit_time`);
+            const savedExitCount = localStorage.getItem(`exam_${EXAM_ID}_exit_count`);
+
+            console.log('🔍 Cek status ujian:', { forceExit, hasFinishedExam, isSubmittingExam });
+
+            if (forceExit === 'true' && !hasFinishedExam && !isSubmittingExam && !isResetting) {
+                console.log('🔄 Deteksi keluar paksa sebelumnya - Mereset ujian...');
+
+                // Tampilkan peringatan
+                showSecurityWarning('⚠️ Terdeteksi keluar dari ujian! Ujian akan di-reset.');
+
+                // Reset ujian
+                resetExamAndRedirect();
+            } else {
+                console.log('✅ Tidak ada deteksi keluar paksa, ujian normal');
+                // Hapus flag jika tidak ada masalah
+                localStorage.removeItem(`exam_${EXAM_ID}_force_exit`);
+            }
+        });
+
+        // 3. DETEKSI PAGEHIDE (alternatif untuk beberapa browser)
+        window.addEventListener('pagehide', function() {
+            if (!isSubmittingExam && !hasFinishedExam && !isResetting) {
+                localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
+                localStorage.setItem(`exam_${EXAM_ID}_exit_time`, new Date().toISOString());
+                console.log('📄 Pagehide terdeteksi');
+            }
+        });
+
+        // 4. DETEKSI BEFOREUNLOAD (refresh/tutup tab)
+        window.addEventListener('beforeunload', function(e) {
+            if (!isSubmittingExam && !hasFinishedExam && !isResetting) {
+                localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
+                localStorage.setItem(`exam_${EXAM_ID}_exit_time`, new Date().toISOString());
+
+                const answeredCount = Object.keys(answers || {}).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
+                const totalQ = {{ $questions->count() }};
+
+                if (answeredCount !== totalQ && totalQ > 0) {
+                    const message = '⚠️ PERINGATAN UJIAN! ⚠️\n\nAnda masih dalam ujian!\nJangan refresh atau tutup halaman!\n\n' +
+                                   (totalQ - answeredCount) + ' soal belum dijawab.\n\nUJIAN AKAN DI-RESET JIKA ANDA KELUAR!';
+                    e.preventDefault();
+                    e.returnValue = message;
+                    return message;
+                }
+            }
+        });
+
+        // ============ FITUR KEAMANAN LAINNYA ============
 
         function showSecurityWarning(message) {
             const warning = document.getElementById('securityWarning');
@@ -247,8 +393,11 @@
             const overlay = document.getElementById('blockOverlay');
             overlay.style.display = 'flex';
 
-            // Log ke server
-            fetch(`{{ url('/siswa/ujian') }}/${examId}/security-violation`, {
+            exitCount++;
+            localStorage.setItem(`exam_${EXAM_ID}_exit_count`, exitCount);
+            localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
+
+            fetch(`{{ url('/siswa/ujian') }}/${EXAM_ID}/security-violation`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -256,27 +405,25 @@
                 },
                 body: JSON.stringify({
                     violation_type: 'exit_attempt',
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    attempt_count: blockCount + 1
                 })
             }).catch(err => console.error('Error:', err));
         }
 
         function hideBlockOverlayAndReload() {
             document.getElementById('blockOverlay').style.display = 'none';
-            // Refresh halaman untuk kembali ke ujian
             window.location.reload();
         }
 
-        // ============ 1. CEGAH TOMBOL BACK - METODE TERAGRESIF ============
+        // CEGAH TOMBOL BACK
         (function aggressiveBackPrevention() {
-            // Push state berkali-kali
             for(let i = 0; i < 50; i++) {
                 history.pushState(null, null, location.href);
             }
 
-            // Intercept popstate
             window.addEventListener('popstate', function(e) {
-                if (!isSubmittingExam && !hasFinishedExam) {
+                if (!isSubmittingExam && !hasFinishedExam && !isResetting) {
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -284,7 +431,6 @@
                     showSecurityWarning(`🚫 Tombol BACK DINONAKTIFKAN! (Percobaan ke-${backPressCount})`);
                     showBlockOverlay();
 
-                    // Push state lagi
                     for(let i = 0; i < 50; i++) {
                         history.pushState(null, null, location.href);
                     }
@@ -292,25 +438,9 @@
                     return false;
                 }
             });
-
-            // Override history methods
-            const originalPushState = history.pushState;
-            const originalReplaceState = history.replaceState;
-
-            history.pushState = function() {
-                if (!isSubmittingExam && !hasFinishedExam) {
-                    originalPushState.apply(this, arguments);
-                }
-            };
-
-            history.replaceState = function() {
-                if (!isSubmittingExam && !hasFinishedExam) {
-                    originalReplaceState.apply(this, arguments);
-                }
-            };
         })();
 
-        // ============ 2. CEGAH GESTURE BACK (SWIPE DARI TEPI) ============
+        // CEGAH GESTURE BACK
         let touchStartX = 0;
         let touchStartY = 0;
 
@@ -325,8 +455,7 @@
             const deltaX = touchCurrentX - touchStartX;
             const deltaY = Math.abs(touchCurrentY - touchStartY);
 
-            // Deteksi swipe dari tepi kiri (gesture back)
-            if (touchStartX < 50 && deltaX > 50 && deltaY < 100 && !isSubmittingExam && !hasFinishedExam) {
+            if (touchStartX < 50 && deltaX > 50 && deltaY < 100 && !isSubmittingExam && !hasFinishedExam && !isResetting) {
                 e.preventDefault();
                 e.stopPropagation();
                 showSecurityWarning('🚫 Gesture kembali DINONAKTIFKAN!');
@@ -335,7 +464,7 @@
             }
         }, { passive: false });
 
-        // ============ 3. CEGAH PULL TO REFRESH ============
+        // CEGAH PULL TO REFRESH
         let startY = 0;
 
         document.addEventListener('touchstart', function(e) {
@@ -346,39 +475,22 @@
             const currentY = e.touches[0].pageY;
             const scrollTop = document.querySelector('.exam-container').scrollTop;
 
-            if (scrollTop === 0 && currentY > startY + 15 && !isSubmittingExam && !hasFinishedExam) {
+            if (scrollTop === 0 && currentY > startY + 15 && !isSubmittingExam && !hasFinishedExam && !isResetting) {
                 e.preventDefault();
                 showSecurityWarning('🚫 Pull-to-refresh DINONAKTIFKAN!');
                 return false;
             }
         }, { passive: false });
 
-        // ============ 4. CEGAH BEFOREUNLOAD (REFRESH/TUTUP) ============
-        window.addEventListener('beforeunload', function(e) {
-            if (!isSubmittingExam && !hasFinishedExam) {
-                const answeredCount = Object.keys(answers || {}).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
-                const totalQ = {{ $questions->count() }};
-
-                if (answeredCount !== totalQ) {
-                    const message = '⚠️ PERINGATAN UJIAN! ⚠️\n\nAnda masih dalam ujian!\nJangan refresh atau tutup halaman!\n\n' +
-                                   (totalQ - answeredCount) + ' soal belum dijawab.\n\nTekan BATAL untuk melanjutkan ujian.';
-                    e.preventDefault();
-                    e.returnValue = message;
-                    return message;
-                }
-            }
-        });
-
-        // ============ 5. CEGAH MENU KONTEKS ============
+        // CEGAH MENU KONTEKS
         document.addEventListener('contextmenu', function(e) {
             if (!isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
-                showSecurityWarning('🚫 Menu konteks DINONAKTIFKAN!');
                 return false;
             }
         });
 
-        // ============ 6. CEGAH COPY-PASTE ============
+        // CEGAH COPY-PASTE
         document.addEventListener('copy', function(e) {
             if (e.target.tagName !== 'TEXTAREA' && !isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
@@ -395,7 +507,7 @@
             }
         });
 
-        // ============ 7. LOCK ORIENTATION ============
+        // LOCK ORIENTATION
         function lockOrientation() {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('portrait').catch(() => {});
@@ -406,25 +518,8 @@
             lockOrientation();
         }
 
-        // ============ 8. DETEKSI VISIBILITY CHANGE (MINIMIZE APP) ============
-        let minimizeCount = 0;
-
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && !isSubmittingExam && !hasFinishedExam) {
-                minimizeCount++;
-                showSecurityWarning(`⚠️ Jangan tinggalkan ujian! (Peringatan ${minimizeCount})`);
-
-                fetch(`{{ url('/siswa/ujian') }}/${examId}/app-minimized`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ timestamp: new Date().toISOString(), count: minimizeCount })
-                }).catch(() => {});
-            }
-        });
-
-        // ============ 9. CEGAH KEYBOARD SHORTCUT ============
+        // CEGAH KEYBOARD SHORTCUT
         document.addEventListener('keydown', function(e) {
-            // Nonaktifkan semua shortcut berbahaya
             const dangerousKeys = ['F5', 'F12', 'Escape', 'Home', 'End'];
             const dangerousCombos = [
                 { ctrl: true, key: 'r' }, { ctrl: true, key: 'R' },
@@ -442,15 +537,13 @@
             }
 
             for (let combo of dangerousCombos) {
-                if ((!combo.ctrl || e.ctrlKey) && (!combo.shift || e.shiftKey) &&
-                    e.key === combo.key) {
+                if ((!combo.ctrl || e.ctrlKey) && (!combo.shift || e.shiftKey) && e.key === combo.key) {
                     e.preventDefault();
                     showSecurityWarning('🚫 Shortcut keyboard dinonaktifkan!');
                     return false;
                 }
             }
 
-            // Navigasi tetap diizinkan
             if (e.key === 'ArrowLeft' && currentIndex > 0) {
                 e.preventDefault();
                 currentIndex--;
@@ -462,11 +555,11 @@
             }
         });
 
-        // ============ 10. OVERRIDE UNTUK KODULAR WEBVIEW ============
+        // OVERRIDE UNTUK KODULAR
         if (window.Android) {
             try {
                 window.Android.onBackPressed = function() {
-                    if (!isSubmittingExam && !hasFinishedExam) {
+                    if (!isSubmittingExam && !hasFinishedExam && !isResetting) {
                         showSecurityWarning('🚫 Tombol back dinonaktifkan di Kodular!');
                         showBlockOverlay();
                         return true;
@@ -487,11 +580,13 @@
         const answers = {};
         const bookmarked = {};
 
+        // Load saved answers
         Object.keys(savedAnswers).forEach(questionId => {
             answers[questionId] = savedAnswers[questionId];
         });
 
-        const savedBookmarks = localStorage.getItem(`exam_${examId}_bookmarks`);
+        // Load bookmarks
+        const savedBookmarks = localStorage.getItem(`exam_${EXAM_ID}_bookmarks`);
         if (savedBookmarks) {
             try {
                 const bookmarks = JSON.parse(savedBookmarks);
@@ -623,7 +718,7 @@
             } else {
                 bookmarked[q.id] = true;
             }
-            localStorage.setItem(`exam_${examId}_bookmarks`, JSON.stringify(bookmarked));
+            localStorage.setItem(`exam_${EXAM_ID}_bookmarks`, JSON.stringify(bookmarked));
             updateBookmarkButton();
             updateNavBox(currentIndex);
             updateBookmarkedCount();
@@ -635,7 +730,7 @@
         }
 
         function saveAnswer(questionId, answer) {
-            fetch(`{{ url('/siswa/ujian') }}/${examId}/save-answer`, {
+            fetch(`{{ url('/siswa/ujian') }}/${EXAM_ID}/save-answer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -731,12 +826,13 @@
             if (confirm(`Anda akan menyelesaikan ujian.\n\nSoal terjawab: ${answered}/${totalQuestions}\n\nYakin ingin selesai?`)) {
                 isSubmittingExam = true;
                 hasFinishedExam = true;
-                localStorage.setItem(`exam_${examId}_finished`, 'true');
+                localStorage.setItem(`exam_${EXAM_ID}_finished`, 'true');
+                localStorage.removeItem(`exam_${EXAM_ID}_force_exit`);
                 document.getElementById('submitForm').submit();
             }
         });
 
-        // Timer
+        // TIMER COUNTDOWN
         const startedAt = new Date('{{ $examResult->started_at ? $examResult->started_at->toIso8601String() : now()->toIso8601String() }}');
         const durationSeconds = durationMinutes * 60;
         const endTime = new Date(startedAt.getTime() + (durationSeconds * 1000));
@@ -760,13 +856,14 @@
         timerInterval = setInterval(renderTimer, 1000);
         renderTimer();
 
-        // Initialize
+        // INITIALIZE
         buildNavGrid();
         renderQuestion(0);
         updateCounts();
         updateBookmarkedCount();
 
-        console.log('✅ Mode keamanan MOBILE TOTAL aktif');
+        console.log('✅ Mode keamanan MOBILE TOTAL dengan AUTO-RESET aktif');
+        console.log(`📊 Exit count sebelumnya: ${exitCount}`);
     </script>
 </body>
 </html>
