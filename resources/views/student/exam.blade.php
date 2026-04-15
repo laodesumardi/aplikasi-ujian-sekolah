@@ -84,7 +84,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 99999;
             display: none;
             align-items: center;
@@ -111,6 +111,22 @@
             flex-direction: column;
             gap: 20px;
         }
+
+        /* Full screen notification */
+        #fullscreenNotification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            z-index: 10001;
+            display: none;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +143,11 @@
         <h2 style="margin: 20px 0 10px;">🚫 AKSES DITOLAK!</h2>
         <p>Anda tidak diizinkan keluar dari aplikasi ujian.<br>Silakan lanjutkan mengerjakan soal.</p>
         <button onclick="hideBlockOverlay()" style="margin-top: 20px; padding: 10px 30px; background: #4f46e5; border: none; border-radius: 8px; color: white; font-weight: bold;">Kembali ke Ujian</button>
+    </div>
+
+    <!-- Full screen notification -->
+    <div id="fullscreenNotification">
+        🔒 Mode layar penuh aktif
     </div>
 
     <div class="exam-container" id="examContainer">
@@ -306,12 +327,13 @@
     </div>
 
     <script>
-        // ============ FITUR PENGAMANAN UNTUK KODULAR ============
+        // ============ FITUR PENGAMANAN MAXIMUM UNTUK KODULAR ============
 
         // Variabel keamanan
         let isSubmittingExam = false;
         let hasFinishedExam = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
         let blockCount = 0;
+        let fullScreenCheckInterval = null;
 
         // Fungsi tampilkan peringatan
         function showSecurityWarning(message) {
@@ -324,7 +346,23 @@
         }
 
         function showBlockOverlay() {
-            document.getElementById('blockOverlay').style.display = 'flex';
+            const overlay = document.getElementById('blockOverlay');
+            overlay.style.display = 'flex';
+
+            // Kirim notifikasi ke server
+            fetch(`{{ url('/siswa/ujian') }}/${examId}/security-violation`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    violation_type: 'exit_attempt',
+                    timestamp: new Date().toISOString(),
+                    attempt_count: blockCount + 1
+                })
+            }).catch(err => console.error('Error logging violation:', err));
+
             setTimeout(() => {
                 hideBlockOverlay();
             }, 3000);
@@ -334,10 +372,59 @@
             document.getElementById('blockOverlay').style.display = 'none';
         }
 
-        // 1. CEGAH TOMBOL BACK (UNTUK WEBVIEW KODULAR)
+        // ============ 1. FULL SCREEN FORCE (KRUSIAL UNTUK KODULAR) ============
+        function forceFullScreen() {
+            const docEl = document.documentElement;
+
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(err => {
+                    console.log('Full screen error:', err);
+                });
+            } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen();
+            } else if (docEl.msRequestFullscreen) {
+                docEl.msRequestFullscreen();
+            }
+
+            // Tampilkan notifikasi
+            const notification = document.getElementById('fullscreenNotification');
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        // Deteksi jika keluar dari full screen
+        function detectFullScreenExit() {
+            if (!document.fullscreenElement && !hasFinishedExam && !isSubmittingExam) {
+                showSecurityWarning('🔒 Jangan keluar dari mode layar penuh!');
+                setTimeout(() => {
+                    forceFullScreen();
+                }, 100);
+            }
+        }
+
+        // Pasang event listener untuk full screen change
+        document.addEventListener('fullscreenchange', detectFullScreenExit);
+        document.addEventListener('webkitfullscreenchange', detectFullScreenExit);
+        document.addEventListener('mozfullscreenchange', detectFullScreenExit);
+        document.addEventListener('MSFullscreenChange', detectFullScreenExit);
+
+        // Paksa full screen saat load dan setiap 5 detik
+        if (!hasFinishedExam && !isSubmittingExam) {
+            setTimeout(forceFullScreen, 500);
+            fullScreenCheckInterval = setInterval(() => {
+                if (!document.fullscreenElement && !hasFinishedExam && !isSubmittingExam) {
+                    forceFullScreen();
+                }
+            }, 5000);
+        }
+
+        // ============ 2. CEGAH TOMBOL BACK (UNTUK WEBVIEW KODULAR) ============
         (function preventBackButton() {
             // Method 1: History API
             history.pushState(null, null, location.href);
+            history.pushState(null, null, location.href); // Double push untuk keamanan
 
             window.addEventListener('popstate', function(event) {
                 if (!isSubmittingExam && !hasFinishedExam) {
@@ -345,18 +432,19 @@
                     showBlockOverlay();
                     // Push state lagi agar tidak bisa back
                     history.pushState(null, null, location.href);
+                    history.pushState(null, null, location.href);
 
                     // Catat percobaan keluar
                     blockCount++;
                     if (blockCount >= 3) {
-                        showSecurityWarning('⚠️ PERINGATAN! Jangan mencoba keluar dari ujian!');
+                        showSecurityWarning('⚠️ PERINGATAN AKHIR! Jangan mencoba keluar dari ujian!');
                     }
                 } else {
                     history.pushState(null, null, location.href);
                 }
             });
 
-            // Method 2: Override event untuk WebView
+            // Method 2: Override event untuk WebView Android
             if (window.Android) {
                 try {
                     window.Android.onBackPressed = function() {
@@ -371,8 +459,9 @@
             }
         })();
 
-        // 2. CEGAH REFRESH/TUTUP WEBVIEW
+        // ============ 3. CEGAH REFRESH/TUTUP WEBVIEW ============
         let refreshAttempts = 0;
+        let answersTemp = {};
 
         window.addEventListener('beforeunload', function(e) {
             const answeredCount = Object.keys(answers || {}).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
@@ -381,6 +470,10 @@
 
             if (!isSubmittingExam && !hasFinishedExam && !isCompleted && totalQ > 0) {
                 refreshAttempts++;
+
+                // Simpan jawaban sementara ke localStorage
+                localStorage.setItem(`exam_{{ $exam->id }}_temp_answers`, JSON.stringify(answers));
+
                 const message = '⚠️ PERINGATAN UJIAN ⚠️\n\nAnda sedang dalam ujian!\n\n• ' + (totalQ - answeredCount) + ' soal belum dijawab\n• Waktu akan terus berjalan\n• Data yang belum tersimpan akan hilang\n\nTekan BATAL untuk melanjutkan ujian.';
                 e.preventDefault();
                 e.returnValue = message;
@@ -392,10 +485,19 @@
             }
         });
 
-        // 3. DETEKSI GESTURE BACK DI HP (Swipe dari tepi kiri)
+        // Restore temporary answers jika ada
+        const tempAnswers = localStorage.getItem(`exam_{{ $exam->id }}_temp_answers`);
+        if (tempAnswers && !hasFinishedExam) {
+            try {
+                const restored = JSON.parse(tempAnswers);
+                Object.assign(answers, restored);
+                localStorage.removeItem(`exam_{{ $exam->id }}_temp_answers`);
+            } catch(e) {}
+        }
+
+        // ============ 4. DETEKSI GESTURE BACK DI HP ============
         let touchStartXPosition = 0;
         let touchStartYPosition = 0;
-        let isBlockingGesture = false;
 
         document.addEventListener('touchstart', function(e) {
             touchStartXPosition = e.changedTouches[0].screenX;
@@ -418,7 +520,7 @@
             }
         }, false);
 
-        // 4. CEGAH SWIPE UNTUK MENUTUP (untuk WebView Kodular)
+        // ============ 5. CEGAH SWIPE UNTUK MENUTUP ============
         let startY = 0;
         document.addEventListener('touchstart', function(e) {
             startY = e.touches[0].pageY;
@@ -436,7 +538,7 @@
             }
         }, { passive: false });
 
-        // 5. NONAKTIFKAN MENU KONTEKS (Long Press)
+        // ============ 6. NONAKTIFKAN MENU KONTEKS ============
         document.addEventListener('contextmenu', function(e) {
             if (!isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
@@ -445,7 +547,7 @@
             }
         });
 
-        // 6. NONAKTIFKAN COPY-PASTE
+        // ============ 7. NONAKTIFKAN COPY-PASTE ============
         document.addEventListener('copy', function(e) {
             if (!isSubmittingExam && !hasFinishedExam) {
                 e.preventDefault();
@@ -470,7 +572,7 @@
             }
         });
 
-        // 7. LOCK ORIENTATION (Mencegah rotasi layar)
+        // ============ 8. LOCK ORIENTATION ============
         function lockOrientation() {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('portrait').catch(function(error) {
@@ -483,24 +585,36 @@
             lockOrientation();
         }
 
-        // 8. DETEKSI MINIMIZE APP (visibility change)
+        // ============ 9. DETEKSI MINIMIZE APP ============
+        let minimizeCount = 0;
         document.addEventListener('visibilitychange', function() {
             if (document.hidden && !isSubmittingExam && !hasFinishedExam) {
-                showSecurityWarning('⚠️ Jangan tinggalkan aplikasi ujian! Waktu tetap berjalan.');
+                minimizeCount++;
+                showSecurityWarning(`⚠️ Jangan tinggalkan aplikasi ujian! (Peringatan ${minimizeCount})`);
+
                 // Catat waktu minimize untuk deteksi kecurangan
                 localStorage.setItem(`exam_{{ $exam->id }}_minimize_time`, new Date().toISOString());
+                localStorage.setItem(`exam_{{ $exam->id }}_minimize_count`, minimizeCount);
+
+                // Kirim ke server
+                fetch(`{{ url('/siswa/ujian') }}/${examId}/app-minimized`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        count: minimizeCount
+                    })
+                }).catch(err => console.error('Error:', err));
             }
         });
 
-        // 9. CEGAH SCREENSHOT (deteksi)
+        // ============ 10. CEGAH SCREENSHOT ============
         let screenshotAttempts = 0;
         document.addEventListener('keyup', function(e) {
-            // Deteksi kombinasi tombol screenshot (Power + Volume Down)
-            if (e.key === 'VolumeDown' || e.key === 'Power') {
+            if (e.key === 'VolumeDown' || e.key === 'Power' || e.key === 'PrintScreen') {
                 screenshotAttempts++;
                 if (screenshotAttempts >= 2) {
                     showSecurityWarning('📸 Screenshot terdeteksi! Ini akan dicatat.');
-                    // Kirim notifikasi ke server (opsional)
                     fetch(`{{ url('/siswa/ujian') }}/${examId}/screenshot-detected`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
@@ -511,19 +625,51 @@
             }
         });
 
-        // 10. Tandai ujian selesai
+        // ============ 11. CEGAH DEVTOOLS ============
+        (function detectDevTools() {
+            const element = new Image();
+            Object.defineProperty(element, 'id', {
+                get: function() {
+                    if (!isSubmittingExam && !hasFinishedExam) {
+                        showSecurityWarning('🚫 DevTools terdeteksi!');
+                    }
+                    return '';
+                }
+            });
+            console.log(element);
+        })();
+
+        // ============ 12. CEGAH INSPECT ELEMENT ============
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+                (e.ctrlKey && e.key === 'u') ||
+                e.key === 'F12') {
+                e.preventDefault();
+                showSecurityWarning('🚫 Alat pengembang dinonaktifkan!');
+                return false;
+            }
+        });
+
+        // ============ 13. Tandai ujian selesai ============
         const originalSubmit = document.getElementById('submitForm').submit;
         document.getElementById('submitForm').submit = function() {
             isSubmittingExam = true;
             hasFinishedExam = true;
             localStorage.setItem(`exam_{{ $exam->id }}_finished`, 'true');
             localStorage.setItem(`exam_{{ $exam->id }}_completed_at`, new Date().toISOString());
+
+            // Clear interval
+            if (fullScreenCheckInterval) {
+                clearInterval(fullScreenCheckInterval);
+            }
+
             return originalSubmit.apply(this, arguments);
         };
 
         // Log keamanan
-        console.log('✅ Mode keamanan ujian untuk Kodular diaktifkan');
+        console.log('✅ Mode keamanan MAXIMUM untuk Kodular diaktifkan');
         console.log('📱 Fitur yang aktif:');
+        console.log('   - Force Full Screen (dengan deteksi exit)');
         console.log('   - Cegah tombol back (History API + WebView override)');
         console.log('   - Cegah refresh/tutup WebView');
         console.log('   - Cegah gesture back HP');
@@ -533,6 +679,8 @@
         console.log('   - Lock orientation');
         console.log('   - Deteksi minimize app');
         console.log('   - Deteksi screenshot');
+        console.log('   - Cegah DevTools');
+        console.log('   - Cegah Inspect Element');
 
         // ============ KODE UJIAN UTAMA ============
 
@@ -971,21 +1119,29 @@
         timerInterval = setInterval(renderTimer, 1000);
         renderTimer();
 
-        // Keyboard shortcuts (untuk testing, nonaktifkan di produksi)
+        // Keyboard shortcuts (nonaktifkan yang berbahaya)
         document.addEventListener('keydown', function(e) {
             if (e.target.tagName === 'TEXTAREA') return;
 
             // Nonaktifkan semua shortcut keyboard yang bisa digunakan untuk keluar
-            if (e.key === 'Escape' || e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+            if (e.key === 'Escape' || e.key === 'F5' || e.key === 'F12' ||
+                (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.key === 'R') ||
+                (e.ctrlKey && e.key === 'w') || (e.ctrlKey && e.key === 'W') ||
+                (e.ctrlKey && e.key === 't') || (e.ctrlKey && e.key === 'T') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+                (e.ctrlKey && e.shiftKey && e.key === 'J')) {
                 e.preventDefault();
                 showSecurityWarning('🚫 Shortcut keyboard dinonaktifkan!');
                 return false;
             }
 
             if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                e.preventDefault();
                 currentIndex--;
                 renderQuestion(currentIndex);
             } else if (e.key === 'ArrowRight' && currentIndex < totalQuestions - 1) {
+                e.preventDefault();
                 currentIndex++;
                 renderQuestion(currentIndex);
             } else if ((e.key === ' ' || e.key === 'b' || e.key === 'B') && e.target.tagName !== 'BUTTON') {
@@ -1002,7 +1158,7 @@
 
         // Tampilkan pesan selamat datang
         setTimeout(() => {
-            showSecurityWarning('🔒 Mode ujian aktif! Jangan keluar dari aplikasi.');
+            showSecurityWarning('🔒 Mode ujian MAXIMUM aktif! Jangan keluar dari aplikasi.');
         }, 1000);
     </script>
 </body>
