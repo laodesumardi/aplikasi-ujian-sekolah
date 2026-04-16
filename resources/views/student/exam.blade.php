@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ujian: {{ $exam->title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>{{ $exam->title }} | Ujian Online</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         * {
@@ -13,997 +13,1057 @@
         }
 
         body {
-            overflow-x: hidden;
-            overflow-y: auto;
+            background: #f5f7fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1a1a2e;
+        }
+
+        /* LAYAR MULAI */
+        .start-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #f3f4f6;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        /* Prevent pull-to-refresh */
-        body {
-            overscroll-behavior-y: contain;
-        }
-
-        /* Sembunyikan scrollbar tapi tetap bisa scroll */
-        body::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Container utama full height */
-        .exam-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Disable text selection on buttons */
-        button, .no-select {
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
-        /* Peringatan floating */
-        #securityWarning {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(220, 38, 38, 0.95);
-            color: white;
-            text-align: center;
-            padding: 8px;
-            font-size: 12px;
-            z-index: 10000;
-            transform: translateY(-100%);
-            transition: transform 0.3s ease;
-        }
-
-        #securityWarning.show {
-            transform: translateY(0);
-        }
-
-        /* Overlay blokir */
-        #blockOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 99999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
-        /* Loading overlay */
-        #loadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: #f5f7fa;
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
             flex-direction: column;
-            gap: 20px;
+            text-align: center;
+        }
+
+        .start-card {
+            background: white;
+            border-radius: 32px;
+            padding: 48px 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+        }
+
+        .start-card h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1a1a2e;
+        }
+
+        .start-card .meta {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .start-card .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffecb3;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .start-card .warning-box p {
+            font-size: 13px;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .btn-start {
+            background: #2d6a4f;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn-start:hover {
+            background: #1b4d3e;
+        }
+
+        /* KONTEN UJIAN */
+        .exam-wrapper {
+            display: none;
+            min-height: 100vh;
+            background: #f5f7fa;
+        }
+
+        /* HEADER */
+        .exam-header {
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .exam-info h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .exam-info p {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .timer-card {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 60px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-display {
+            font-family: monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: #c53030;
+        }
+
+        /* MAIN CONTENT */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @media (min-width: 992px) {
+            .main-container {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            .question-panel { flex: 2; }
+            .nav-panel { flex: 1; position: sticky; top: 90px; }
+        }
+
+        /* PANEL SOAL */
+        .question-panel {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+        }
+
+        .question-header {
+            padding: 24px 28px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .question-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge-number {
+            background: #2d6a4f;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .question-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a2e;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .bookmark-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            background: white;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .bookmark-btn.active {
+            background: #fff8e7;
+            border-color: #f59e0b;
+        }
+
+        /* OPSI JAWABAN - SELURUH AREA BISA DIKLIK */
+        .options-area {
+            padding: 24px 28px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .option-item:hover {
+            border-color: #2d6a4f;
+            background: #f8fafc;
+        }
+
+        .option-item.selected {
+            border-color: #2d6a4f;
+            background: #f0fdf4;
+        }
+
+        /* SEMBUNYIKAN RADIO DEFAULT */
+        .option-radio {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* CUSTOM RADIO YANG LEBIH BAGUS */
+        .custom-radio {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            background: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .option-item.selected .custom-radio {
+            border-color: #2d6a4f;
+            background: #2d6a4f;
+            box-shadow: inset 0 0 0 4px white;
+        }
+
+        .option-item:hover .custom-radio {
+            border-color: #2d6a4f;
+        }
+
+        .option-letter {
+            font-weight: 700;
+            color: #2d6a4f;
+            min-width: 28px;
+            font-size: 15px;
+        }
+
+        .option-text {
+            flex: 1;
+            color: #334155;
+            line-height: 1.4;
+        }
+
+        .essay-area {
+            width: 100%;
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 15px;
+            font-family: inherit;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .essay-area:focus {
+            outline: none;
+            border-color: #2d6a4f;
+        }
+
+        /* NAVIGASI SOAL */
+        .question-footer {
+            padding: 20px 28px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .nav-btn {
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .nav-prev {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .nav-prev:hover:not(:disabled) {
+            background: #dee2e6;
+        }
+
+        .nav-next {
+            background: #2d6a4f;
+            color: white;
+        }
+
+        .nav-next:hover:not(:disabled) {
+            background: #1b4d3e;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* PANEL NAVIGASI */
+        .nav-panel {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid #e9ecef;
+            padding: 24px;
+        }
+
+        .stats-grid {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stat-number.total { color: #1a1a2e; }
+        .stat-number.answered { color: #2d6a4f; }
+        .stat-number.bookmarked { color: #f59e0b; }
+        .stat-number.unanswered { color: #e53e3e; }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .nav-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #e9ecef;
+            background: white;
+            color: #495057;
+            transition: all 0.15s;
+        }
+
+        .nav-item.answered {
+            background: #2d6a4f;
+            color: white;
+            border-color: #2d6a4f;
+        }
+
+        .nav-item.bookmarked {
+            background: #fff8e7;
+            border-color: #f59e0b;
+            color: #d97706;
+        }
+
+        .nav-item.active {
+            background: #1a1a2e;
+            color: white;
+            border-color: #1a1a2e;
+            transform: scale(1.02);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #b91c1c;
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-stats {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* TOAST */
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1a2e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 60px;
+            font-size: 13px;
+            z-index: 10001;
+            transition: 0.25s;
+            white-space: nowrap;
+        }
+
+        .toast-message.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
-    <!-- Security Warning -->
-    <div id="securityWarning">
-        ⚠️ DILARANG KELUAR DARI APLIKASI UJIAN! Jawaban akan tersimpan otomatis.
-    </div>
 
-    <!-- Block Overlay (jika mencoba keluar) -->
-    <div id="blockOverlay">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <h2 style="margin: 20px 0 10px;">🚫 AKSES DITOLAK!</h2>
-        <p>Anda tidak diizinkan keluar dari aplikasi ujian.<br>Silakan lanjutkan mengerjakan soal.</p>
-        <button onclick="hideBlockOverlay()" style="margin-top: 20px; padding: 10px 30px; background: #4f46e5; border: none; border-radius: 8px; color: white; font-weight: bold;">Kembali ke Ujian</button>
+<!-- LAYAR PEMBUKA -->
+<div class="start-screen" id="startScreen">
+    <div class="start-card">
+        <h1>{{ $exam->title }}</h1>
+        <div class="meta">{{ $exam->subject->name ?? 'Ujian Online' }} • {{ $exam->duration }} Menit</div>
+        <div class="warning-box">
+            <p>📌 <strong>Perhatian:</strong></p>
+            <p>• Ujian akan berlangsung dalam mode layar penuh</p>
+            <p>• Dilarang keluar dari aplikasi selama ujian</p>
+            <p>• Jawaban akan tersimpan secara otomatis</p>
+        </div>
+        <button class="btn-start" id="startBtn">Mulai Ujian →</button>
     </div>
+</div>
 
-    <div class="exam-container" id="examContainer">
-        <!-- Header dengan Timer -->
-        <header class="sticky top-0 z-50 bg-white shadow-md">
-            <div class="flex items-center justify-between px-4 py-3 mx-auto max-w-7xl">
-                <div>
-                    <h1 class="text-lg font-bold text-gray-900">{{ $exam->title }}</h1>
-                    <p class="text-sm text-gray-600">{{ $exam->subject->name ?? '-' }} | Durasi: {{ $exam->duration }} menit</p>
-                </div>
-                <div id="timerBox" class="flex items-center gap-2 px-4 py-2 text-white bg-orange-600 border-2 border-red-600 rounded-lg shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                        <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" />
-                        <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5zm0 2.25a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="font-mono text-lg font-semibold" id="timerDisplay">00:00:00</span>
-                </div>
+<!-- KONTEN UJIAN -->
+<div class="exam-wrapper" id="examWrapper">
+    <div class="exam-header">
+        <div class="header-container">
+            <div class="exam-info">
+                <h2>{{ $exam->title }}</h2>
+                <p>{{ $exam->subject->name ?? 'Ujian' }} • {{ $exam->duration }} menit</p>
             </div>
-        </header>
-
-        <div class="px-4 py-6 mx-auto max-w-7xl">
-            <div class="flex flex-col gap-6 lg:flex-row">
-                <!-- Question Column (70%) -->
-                <div class="flex-1 lg:w-2/3">
-                    <div class="p-6 bg-white rounded-lg shadow-lg">
-                        <div id="questionArea" class="space-y-6">
-                            <div class="flex items-center justify-between gap-3 mb-4">
-                                <div class="flex items-center flex-1 gap-3">
-                                    <span class="inline-flex items-center justify-center w-10 h-10 text-lg font-bold text-white rounded-lg bg-primary" id="currentNumber">1</span>
-                                    <h2 class="flex-1 text-xl font-semibold text-gray-900" id="questionText">Memuat soal...</h2>
-                                </div>
-                                <button id="bookmarkBtn" type="button" class="inline-flex items-center justify-center w-10 h-10 transition-colors border-2 border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50" title="Tandai soal untuk ditinjau kembali">
-                                    <svg id="bookmarkIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5 text-gray-400">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div id="optionsArea" class="space-y-3"></div>
-
-                            <div class="flex items-center justify-between pt-6 mt-8 border-t border-gray-200">
-                                <button id="prevBtn" class="px-6 py-2.5 rounded-lg bg-gray-300 text-gray-900 hover:bg-gray-400 transition-colors font-medium">Soal Sebelumnya</button>
-                                <button id="nextBtn" class="px-6 py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors font-medium">Soal Selanjutnya</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Navigation Sidebar (30%) -->
-                <div class="lg:w-1/3">
-                    <div class="sticky p-6 bg-white rounded-lg shadow-lg top-24">
-                        <h3 class="mb-4 text-lg font-bold text-gray-900">Navigasi Soal</h3>
-
-                        <div class="p-3 mb-4 rounded-lg bg-gray-50">
-                            <div class="flex items-center justify-between mb-2 text-sm">
-                                <span class="text-gray-600">Total Soal:</span>
-                                <span class="font-semibold text-gray-900" id="totalQuestions">{{ $questions->count() }}</span>
-                            </div>
-                            <div class="flex items-center justify-between mb-2 text-sm">
-                                <span class="text-green-600">Sudah Dikerjakan:</span>
-                                <span class="font-semibold text-green-700" id="answeredCount">0</span>
-                            </div>
-                            <div class="flex items-center justify-between mb-2 text-sm">
-                                <span class="text-yellow-600">Ditandai:</span>
-                                <span class="font-semibold text-yellow-700" id="bookmarkedCount">0</span>
-                            </div>
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600">Belum Dikerjakan:</span>
-                                <span class="font-semibold text-gray-700" id="unansweredCount">{{ $questions->count() }}</span>
-                            </div>
-                        </div>
-
-                        <div id="navGrid" class="grid grid-cols-5 gap-2 mb-6 overflow-y-auto max-h-96"></div>
-
-                        <div class="mt-auto">
-                            <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
-                                @csrf
-                                <button type="button" id="finishBtn" class="w-full px-4 py-3 font-semibold text-white transition-colors bg-red-600 rounded-lg shadow-md hover:bg-red-700">
-                                    Selesai Ujian
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+            <div class="timer-card">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
             </div>
         </div>
     </div>
 
-    <!-- Finish Confirmation Modal -->
-    <div id="finishConfirmModal" class="fixed inset-0 z-50 hidden overflow-y-auto transition-opacity duration-200 opacity-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" onclick="hideFinishConfirmModal()"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <div id="modalContent" class="inline-block w-full overflow-hidden text-left align-bottom transition-all transform scale-95 bg-white shadow-2xl rounded-2xl sm:my-8 sm:align-middle sm:max-w-lg">
-                <div class="px-6 py-5 bg-gradient-to-r from-red-600 to-red-700">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-white/20">
-                                <svg class="text-white w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-bold text-white" id="modal-title">Konfirmasi Penyelesaian Ujian</h3>
-                        </div>
-                        <button onclick="hideFinishConfirmModal()" class="transition-colors text-white/80 hover:text-white">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
+    <div class="main-container">
+        <div class="question-panel">
+            <div class="question-header">
+                <div class="question-badge">
+                    <div class="badge-number" id="currentNumber">1</div>
                 </div>
+                <div class="question-title" id="questionText">Memuat soal...</div>
+                <button class="bookmark-btn" id="bookmarkBtn">☆</button>
+            </div>
 
-                <div class="px-6 py-6 bg-white">
-                    <p class="mb-6 text-gray-700">Anda yakin ingin menyelesaikan ujian ini? Pastikan semua jawaban sudah benar.</p>
+            <div class="options-area" id="optionsArea"></div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="p-4 border-2 border-blue-200 bg-blue-50 rounded-xl">
-                            <div class="flex items-center gap-2 mb-2">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                                <span class="text-sm font-medium text-blue-600">Total Soal</span>
-                            </div>
-                            <p class="text-2xl font-bold text-blue-900" id="modalTotalQuestions">0</p>
-                        </div>
-
-                        <div class="p-4 border-2 border-green-200 bg-green-50 rounded-xl">
-                            <div class="flex items-center gap-2 mb-2">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span class="text-sm font-medium text-green-600">Sudah Dikerjakan</span>
-                            </div>
-                            <p class="text-2xl font-bold text-green-900" id="modalAnswered">0</p>
-                        </div>
-
-                        <div class="p-4 border-2 border-yellow-200 bg-yellow-50 rounded-xl">
-                            <div class="flex items-center gap-2 mb-2">
-                                <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                </svg>
-                                <span class="text-sm font-medium text-yellow-600">Ditandai</span>
-                            </div>
-                            <p class="text-2xl font-bold text-yellow-900" id="modalBookmarked">0</p>
-                        </div>
-
-                        <div class="p-4 border-2 border-gray-200 bg-gray-50 rounded-xl">
-                            <div class="flex items-center gap-2 mb-2">
-                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span class="text-sm font-medium text-gray-600">Belum Dikerjakan</span>
-                            </div>
-                            <p class="text-2xl font-bold text-gray-900" id="modalUnanswered">0</p>
-                        </div>
-                    </div>
-
-                    <div id="modalWarning" class="mb-6"></div>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50">
-                    <button onclick="hideFinishConfirmModal()" class="px-5 py-2.5 rounded-lg font-medium text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                        Batal
-                    </button>
-                    <button onclick="confirmFinishExam()" class="px-5 py-2.5 rounded-lg font-medium text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg hover:shadow-xl transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            <span>Ya, Selesaikan Ujian</span>
-                        </div>
-                    </button>
-                </div>
+            <div class="question-footer">
+                <button class="nav-btn nav-prev" id="prevBtn">← Sebelumnya</button>
+                <button class="nav-btn nav-next" id="nextBtn">Selanjutnya →</button>
             </div>
         </div>
+
+        <div class="nav-panel">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number total" id="totalQuestions">0</div>
+                    <div class="stat-label">Total Soal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number answered" id="answeredCount">0</div>
+                    <div class="stat-label">Dijawab</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number bookmarked" id="bookmarkedCount">0</div>
+                    <div class="stat-label">Ditandai</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number unanswered" id="unansweredCount">0</div>
+                    <div class="stat-label">Belum</div>
+                </div>
+            </div>
+
+            <div class="nav-grid" id="navGrid"></div>
+
+            <form id="submitForm" method="POST" action="{{ route('siswa.exam.submit', $exam->id) }}">
+                @csrf
+                <button type="button" class="btn-submit" id="finishBtn">Selesaikan Ujian</button>
+            </form>
+        </div>
     </div>
+</div>
 
-    <script>
-        // ============ FITUR PENGAMANAN UNTUK KODULAR ============
+<!-- MODAL -->
+<div class="modal-overlay" id="finishModal">
+    <div class="modal-container">
+        <h3>Selesaikan Ujian?</h3>
+        <p style="color: #6c757d;">Pastikan semua jawaban sudah benar</p>
+        <div class="modal-stats" id="modalStats"></div>
+        <div class="modal-buttons">
+            <button style="background: #e9ecef;" id="cancelBtn">Kembali</button>
+            <button style="background: #dc2626; color: white;" id="confirmBtn">Ya, Selesai</button>
+        </div>
+    </div>
+</div>
 
-        // Variabel keamanan
-        let isSubmittingExam = false;
-        let hasFinishedExam = localStorage.getItem(`exam_{{ $exam->id }}_finished`) === 'true';
-        let blockCount = 0;
+<div class="toast-message" id="toast">⚠️ Dilarang keluar dari ujian!</div>
 
-        // Fungsi tampilkan peringatan
-        function showSecurityWarning(message) {
-            const warning = document.getElementById('securityWarning');
-            warning.textContent = message || '⚠️ DILARANG KELUAR DARI APLIKASI UJIAN!';
-            warning.classList.add('show');
-            setTimeout(() => {
-                warning.classList.remove('show');
-            }, 3000);
-        }
+<script>
+// ==================== DATA ====================
+const EXAM_ID = {{ $exam->id }};
+const DURASI_MENIT = {{ $exam->duration }};
+const SOAL_ASLI = @json($questionsData);
 
-        function showBlockOverlay() {
-            document.getElementById('blockOverlay').style.display = 'flex';
-            setTimeout(() => {
-                hideBlockOverlay();
-            }, 3000);
-        }
+let ujianDimulai = false;
+let sedangSubmit = false;
+let sudahSelesai = localStorage.getItem(`exam_${EXAM_ID}_finished`) === 'true';
 
-        function hideBlockOverlay() {
-            document.getElementById('blockOverlay').style.display = 'none';
-        }
+let soal = [];
+let indexSekarang = 0;
+let jawaban = {};
+let ditandai = {};
 
-        // 1. CEGAH TOMBOL BACK (UNTUK WEBVIEW KODULAR)
-        (function preventBackButton() {
-            // Method 1: History API
-            history.pushState(null, null, location.href);
+let timerInterval = null;
 
-            window.addEventListener('popstate', function(event) {
-                if (!isSubmittingExam && !hasFinishedExam) {
-                    showSecurityWarning('🚫 Tombol kembali dinonaktifkan! Lanjutkan ujian Anda.');
-                    showBlockOverlay();
-                    // Push state lagi agar tidak bisa back
-                    history.pushState(null, null, location.href);
+// ==================== FULL SCREEN ====================
+function masukFullscreen() {
+    const doc = document.documentElement;
+    if (doc.requestFullscreen) doc.requestFullscreen();
+    else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+}
 
-                    // Catat percobaan keluar
-                    blockCount++;
-                    if (blockCount >= 3) {
-                        showSecurityWarning('⚠️ PERINGATAN! Jangan mencoba keluar dari ujian!');
-                    }
-                } else {
-                    history.pushState(null, null, location.href);
-                }
+setInterval(() => {
+    if (ujianDimulai && !sedangSubmit && !sudahSelesai) {
+        const isFull = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!isFull) masukFullscreen();
+    }
+}, 3000);
+
+// ==================== FUNGSI BANTUAN ====================
+function acakArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function acakSoal() {
+    let acak = acakArray([...SOAL_ASLI]);
+    acak = acak.map(q => {
+        if (q.type === 'pilihan_ganda' && q.options) {
+            let opts = [];
+            if (Array.isArray(q.options)) opts = [...q.options];
+            else if (typeof q.options === 'object') opts = Object.values(q.options);
+            const acakOpt = acakArray([...opts]);
+            const baru = {};
+            ['A', 'B', 'C', 'D'].forEach((key, idx) => {
+                if (acakOpt[idx]) baru[key] = acakOpt[idx];
             });
-
-            // Method 2: Override event untuk WebView
-            if (window.Android) {
-                try {
-                    window.Android.onBackPressed = function() {
-                        if (!isSubmittingExam && !hasFinishedExam) {
-                            showSecurityWarning('🚫 Tombol kembali dinonaktifkan!');
-                            showBlockOverlay();
-                            return true;
-                        }
-                        return false;
-                    };
-                } catch(e) {}
-            }
-        })();
-
-        // 2. CEGAH REFRESH/TUTUP WEBVIEW
-        let refreshAttempts = 0;
-
-        window.addEventListener('beforeunload', function(e) {
-            const answeredCount = Object.keys(answers || {}).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
-            const totalQ = {{ $questions->count() }};
-            const isCompleted = answeredCount === totalQ;
-
-            if (!isSubmittingExam && !hasFinishedExam && !isCompleted && totalQ > 0) {
-                refreshAttempts++;
-                const message = '⚠️ PERINGATAN UJIAN ⚠️\n\nAnda sedang dalam ujian!\n\n• ' + (totalQ - answeredCount) + ' soal belum dijawab\n• Waktu akan terus berjalan\n• Data yang belum tersimpan akan hilang\n\nTekan BATAL untuk melanjutkan ujian.';
-                e.preventDefault();
-                e.returnValue = message;
-
-                if (refreshAttempts >= 2) {
-                    showSecurityWarning('⚠️ JANGAN REFRESH! Ini peringatan terakhir.');
-                }
-                return message;
-            }
-        });
-
-        // 3. DETEKSI GESTURE BACK DI HP (Swipe dari tepi kiri)
-        let touchStartXPosition = 0;
-        let touchStartYPosition = 0;
-        let isBlockingGesture = false;
-
-        document.addEventListener('touchstart', function(e) {
-            touchStartXPosition = e.changedTouches[0].screenX;
-            touchStartYPosition = e.changedTouches[0].screenY;
-        }, false);
-
-        document.addEventListener('touchend', function(e) {
-            const touchEndXPosition = e.changedTouches[0].screenX;
-            const touchEndYPosition = e.changedTouches[0].screenY;
-            const deltaX = touchEndXPosition - touchStartXPosition;
-            const deltaY = Math.abs(touchEndYPosition - touchStartYPosition);
-
-            // Deteksi swipe dari tepi kiri (gesture back di banyak browser HP)
-            if (touchStartXPosition < 40 && deltaX > 70 && deltaY < 100 && !isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                e.stopPropagation();
-                showSecurityWarning('🚫 Gesture kembali dinonaktifkan!');
-                showBlockOverlay();
-                return false;
-            }
-        }, false);
-
-        // 4. CEGAH SWIPE UNTUK MENUTUP (untuk WebView Kodular)
-        let startY = 0;
-        document.addEventListener('touchstart', function(e) {
-            startY = e.touches[0].pageY;
-        });
-
-        document.addEventListener('touchmove', function(e) {
-            const currentY = e.touches[0].pageY;
-            const scrollTop = document.querySelector('.exam-container').scrollTop;
-
-            // Jika di paling atas dan menarik ke bawah (pull-to-refresh/close)
-            if (scrollTop === 0 && currentY > startY + 10 && !isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                showSecurityWarning('🚫 Tidak bisa pull-to-refresh selama ujian!');
-                return false;
-            }
-        }, { passive: false });
-
-        // 5. NONAKTIFKAN MENU KONTEKS (Long Press)
-        document.addEventListener('contextmenu', function(e) {
-            if (!isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                showSecurityWarning('🚫 Menu konteks dinonaktifkan!');
-                return false;
-            }
-        });
-
-        // 6. NONAKTIFKAN COPY-PASTE
-        document.addEventListener('copy', function(e) {
-            if (!isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                showSecurityWarning('❌ Menyalin teks tidak diizinkan!');
-                return false;
-            }
-        });
-
-        document.addEventListener('cut', function(e) {
-            if (!isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                showSecurityWarning('❌ Memotong teks tidak diizinkan!');
-                return false;
-            }
-        });
-
-        document.addEventListener('paste', function(e) {
-            if (e.target.tagName !== 'TEXTAREA' && !isSubmittingExam && !hasFinishedExam) {
-                e.preventDefault();
-                showSecurityWarning('❌ Menempel teks hanya diizinkan pada jawaban essay!');
-                return false;
-            }
-        });
-
-        // 7. LOCK ORIENTATION (Mencegah rotasi layar)
-        function lockOrientation() {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('portrait').catch(function(error) {
-                    console.log('Orientation lock not supported:', error);
-                });
-            }
+            return { ...q, options: baru };
         }
+        return q;
+    });
+    return acak;
+}
 
-        if (!hasFinishedExam && !isSubmittingExam) {
-            lockOrientation();
-        }
+function simpanJawaban(id, jawab) {
+    const semua = JSON.parse(localStorage.getItem(`exam_${EXAM_ID}_answers`) || '{}');
+    semua[id] = jawab;
+    localStorage.setItem(`exam_${EXAM_ID}_answers`, JSON.stringify(semua));
 
-        // 8. DETEKSI MINIMIZE APP (visibility change)
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && !isSubmittingExam && !hasFinishedExam) {
-                showSecurityWarning('⚠️ Jangan tinggalkan aplikasi ujian! Waktu tetap berjalan.');
-                // Catat waktu minimize untuk deteksi kecurangan
-                localStorage.setItem(`exam_{{ $exam->id }}_minimize_time`, new Date().toISOString());
-            }
-        });
+    fetch(`{{ url('/siswa/ujian') }}/${EXAM_ID}/save-answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ question_id: id, answer: jawab })
+    }).catch(() => {});
+}
 
-        // 9. CEGAH SCREENSHOT (deteksi)
-        let screenshotAttempts = 0;
-        document.addEventListener('keyup', function(e) {
-            // Deteksi kombinasi tombol screenshot (Power + Volume Down)
-            if (e.key === 'VolumeDown' || e.key === 'Power') {
-                screenshotAttempts++;
-                if (screenshotAttempts >= 2) {
-                    showSecurityWarning('📸 Screenshot terdeteksi! Ini akan dicatat.');
-                    // Kirim notifikasi ke server (opsional)
-                    fetch(`{{ url('/siswa/ujian') }}/${examId}/screenshot-detected`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: JSON.stringify({ timestamp: new Date().toISOString() })
-                    }).catch(err => console.error('Error:', err));
-                    screenshotAttempts = 0;
-                }
-            }
-        });
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
 
-        // 10. Tandai ujian selesai
-        const originalSubmit = document.getElementById('submitForm').submit;
-        document.getElementById('submitForm').submit = function() {
-            isSubmittingExam = true;
-            hasFinishedExam = true;
-            localStorage.setItem(`exam_{{ $exam->id }}_finished`, 'true');
-            localStorage.setItem(`exam_{{ $exam->id }}_completed_at`, new Date().toISOString());
-            return originalSubmit.apply(this, arguments);
-        };
+// ==================== TIMER ====================
+function mulaiTimer() {
+    let waktuMulai = localStorage.getItem(`exam_${EXAM_ID}_start_time`);
+    if (!waktuMulai || sudahSelesai) {
+        waktuMulai = new Date().toISOString();
+        localStorage.setItem(`exam_${EXAM_ID}_start_time`, waktuMulai);
+    }
 
-        // Log keamanan
-        console.log('✅ Mode keamanan ujian untuk Kodular diaktifkan');
-        console.log('📱 Fitur yang aktif:');
-        console.log('   - Cegah tombol back (History API + WebView override)');
-        console.log('   - Cegah refresh/tutup WebView');
-        console.log('   - Cegah gesture back HP');
-        console.log('   - Cegah swipe untuk keluar');
-        console.log('   - Nonaktifkan menu konteks');
-        console.log('   - Nonaktifkan copy-paste');
-        console.log('   - Lock orientation');
-        console.log('   - Deteksi minimize app');
-        console.log('   - Deteksi screenshot');
+    const waktuAkhir = new Date(new Date(waktuMulai).getTime() + (DURASI_MENIT * 60 * 1000));
 
-        // ============ KODE UJIAN UTAMA ============
+    function updateTimer() {
+        if (sedangSubmit || sudahSelesai) return;
 
-        // Exam data
-        const examId = {{ $exam->id }};
-        const durationMinutes = {{ $exam->duration }};
-        const questions = @json($questionsData);
-        const savedAnswers = @json($answers ?? []);
-        const totalQuestions = questions.length;
+        const sisa = Math.max(0, Math.floor((waktuAkhir - new Date()) / 1000));
+        const jam = Math.floor(sisa / 3600);
+        const menit = Math.floor((sisa % 3600) / 60);
+        const detik = sisa % 60;
 
-        let currentIndex = 0;
-        const answers = {};
-        const bookmarked = {};
+        document.getElementById('timerDisplay').textContent =
+            `${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
 
-        // Load saved answers
-        Object.keys(savedAnswers).forEach(questionId => {
-            answers[questionId] = savedAnswers[questionId];
-        });
-
-        // Load bookmarked questions from localStorage
-        const savedBookmarks = localStorage.getItem(`exam_${examId}_bookmarks`);
-        if (savedBookmarks) {
-            try {
-                const bookmarks = JSON.parse(savedBookmarks);
-                Object.keys(bookmarks).forEach(qId => {
-                    if (bookmarks[qId]) {
-                        bookmarked[qId] = true;
-                    }
-                });
-            } catch (e) {
-                console.error('Error loading bookmarks:', e);
-            }
-        }
-
-        const questionTextEl = document.getElementById('questionText');
-        const currentNumberEl = document.getElementById('currentNumber');
-        const optionsAreaEl = document.getElementById('optionsArea');
-        const navGridEl = document.getElementById('navGrid');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const finishBtn = document.getElementById('finishBtn');
-        const bookmarkBtn = document.getElementById('bookmarkBtn');
-        const bookmarkIcon = document.getElementById('bookmarkIcon');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const answeredCountEl = document.getElementById('answeredCount');
-        const unansweredCountEl = document.getElementById('unansweredCount');
-        const bookmarkedCountEl = document.getElementById('bookmarkedCount');
-
-        function renderQuestion(index) {
-            if (index < 0 || index >= totalQuestions) return;
-
-            const q = questions[index];
-            currentNumberEl.textContent = index + 1;
-            questionTextEl.innerHTML = q.text || 'Memuat soal...';
-            optionsAreaEl.innerHTML = '';
-
-            if (q.type === 'pilihan_ganda') {
-                let optionsList = [];
-
-                if (q.options) {
-                    if (Array.isArray(q.options)) {
-                        q.options.slice(0, 4).forEach((opt, idx) => {
-                            const key = String.fromCharCode(65 + idx);
-                            let value = '';
-                            if (typeof opt === 'string') {
-                                value = opt;
-                            } else if (opt && typeof opt === 'object') {
-                                value = opt.label || opt.text || opt.value || String(opt);
-                            } else {
-                                value = String(opt);
-                            }
-                            optionsList.push({ key: key, value: value.trim() });
-                        });
-                    } else if (typeof q.options === 'object' && q.options !== null) {
-                        const optionKeys = ['A', 'B', 'C', 'D'];
-                        optionKeys.forEach((key) => {
-                            if ((q.options.hasOwnProperty && q.options.hasOwnProperty(key)) ||
-                                (key in q.options) ||
-                                (q.options[key] !== undefined && q.options[key] !== null)) {
-                                let value = String(q.options[key] || '').trim();
-                                if (value === 'null' || value === 'undefined') {
-                                    value = '';
-                                }
-                                optionsList.push({ key: key, value: value });
-                            }
-                        });
-
-                        if (optionsList.length === 0) {
-                            Object.keys(q.options).forEach((key, idx) => {
-                                if (idx >= 4) return;
-                                const value = String(q.options[key] || '').trim();
-                                if (/^[A-D]$/i.test(key)) {
-                                    if (value !== 'null' && value !== 'undefined') {
-                                        optionsList.push({ key: key.toUpperCase(), value: value });
-                                    }
-                                } else {
-                                    const optionKey = String.fromCharCode(65 + idx);
-                                    if (value !== 'null' && value !== 'undefined') {
-                                        optionsList.push({ key: optionKey, value: value });
-                                    }
-                                }
-                            });
-                        }
-
-                        const existingKeys = optionsList.map(opt => opt.key);
-                        optionKeys.forEach((key) => {
-                            if (!existingKeys.includes(key)) {
-                                optionsList.push({ key: key, value: '' });
-                            }
-                        });
-
-                        optionsList.sort((a, b) => a.key.localeCompare(b.key));
-                    }
-                }
-
-                const requiredKeys = ['A', 'B', 'C', 'D'];
-                const existingKeys = optionsList.map(opt => opt.key);
-                requiredKeys.forEach((key) => {
-                    if (!existingKeys.includes(key)) {
-                        optionsList.push({ key: key, value: '' });
-                    }
-                });
-
-                optionsList.sort((a, b) => a.key.localeCompare(b.key));
-                const hasAnyContent = optionsList.some(opt => opt.value && opt.value.trim() !== '');
-                const filteredOptions = optionsList
-                    .filter(opt => ['A', 'B', 'C', 'D'].includes(opt.key))
-                    .filter(opt => opt.value.trim() !== '' || hasAnyContent || optionsList.length === 1);
-
-                if (filteredOptions.length > 0) {
-                    filteredOptions.forEach((option) => {
-                        const wrapper = document.createElement('label');
-                        wrapper.className = 'flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-gray-200 hover:border-primary hover:bg-primary/5 cursor-pointer transition-all';
-
-                        const radio = document.createElement('input');
-                        radio.type = 'radio';
-                        radio.name = `q_${q.id}`;
-                        radio.id = `q${q.id}_${option.key}`;
-                        radio.value = option.key;
-                        radio.checked = answers[q.id] === option.key;
-                        radio.addEventListener('change', () => {
-                            answers[q.id] = option.key;
-                            saveAnswer(q.id, option.key);
-                            updateNavBox(index);
-                            updateCounts();
-                        });
-
-                        const text = document.createElement('span');
-                        text.className = 'flex-1 text-gray-900';
-                        if (option.value && option.value.trim() !== '') {
-                            text.textContent = option.key + '. ' + option.value;
-                        } else {
-                            text.textContent = option.key + '. (Tidak ada teks)';
-                            text.className += ' text-gray-400 italic';
-                        }
-
-                        wrapper.appendChild(radio);
-                        wrapper.appendChild(text);
-                        optionsAreaEl.appendChild(wrapper);
-                    });
-                } else {
-                    const message = document.createElement('div');
-                    message.className = 'p-4 bg-red-50 border border-red-200 rounded-lg';
-                    message.innerHTML = '<p class="text-sm font-medium text-red-600">Opsi tidak tersedia untuk soal pilihan ganda ini.</p>';
-                    optionsAreaEl.appendChild(message);
-                }
-            } else if (q.type === 'essay' || q.type === 'esai') {
-                const textarea = document.createElement('textarea');
-                textarea.className = 'w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent';
-                textarea.rows = 6;
-                textarea.placeholder = 'Tulis jawaban Anda di sini...';
-                textarea.value = answers[q.id] || '';
-                textarea.addEventListener('blur', () => {
-                    answers[q.id] = textarea.value;
-                    saveAnswer(q.id, textarea.value);
-                    updateNavBox(index);
-                    updateCounts();
-                });
-                optionsAreaEl.appendChild(textarea);
-            } else {
-                const message = document.createElement('div');
-                message.className = 'p-4 bg-yellow-50 border border-yellow-200 rounded-lg';
-                message.innerHTML = `<p class="text-sm font-medium text-yellow-800">Jenis soal tidak dikenali: "${q.type}"</p>`;
-                optionsAreaEl.appendChild(message);
-            }
-
-            updateActiveBox(index);
-            updatePrevNextState();
-            updateBookmarkButton();
-        }
-
-        function updateBookmarkButton() {
-            const q = questions[currentIndex];
-            const isBookmarked = bookmarked[q.id] || false;
-
-            if (isBookmarked) {
-                bookmarkBtn.className = 'inline-flex items-center justify-center w-10 h-10 rounded-lg border-2 border-yellow-400 bg-yellow-50 transition-colors';
-                bookmarkIcon.className = 'w-5 h-5 text-yellow-600';
-                bookmarkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" fill="currentColor" stroke="none"/>';
-                bookmarkBtn.title = 'Hapus tanda soal';
-            } else {
-                bookmarkBtn.className = 'inline-flex items-center justify-center w-10 h-10 rounded-lg border-2 border-gray-300 hover:border-yellow-400 hover:bg-yellow-50 transition-colors';
-                bookmarkIcon.className = 'w-5 h-5 text-gray-400';
-                bookmarkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>';
-                bookmarkBtn.title = 'Tandai soal untuk ditinjau kembali';
-            }
-        }
-
-        function toggleBookmark() {
-            const q = questions[currentIndex];
-            if (bookmarked[q.id]) {
-                delete bookmarked[q.id];
-            } else {
-                bookmarked[q.id] = true;
-            }
-
-            localStorage.setItem(`exam_${examId}_bookmarks`, JSON.stringify(bookmarked));
-            updateBookmarkButton();
-            updateNavBox(currentIndex);
-            updateBookmarkedCount();
-        }
-
-        function updateBookmarkedCount() {
-            const count = Object.keys(bookmarked).filter(qId => bookmarked[qId]).length;
-            bookmarkedCountEl.textContent = count;
-        }
-
-        function saveAnswer(questionId, answer) {
-            fetch(`{{ url('/siswa/ujian') }}/${examId}/save-answer`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    question_id: questionId,
-                    answer: answer
-                })
-            }).catch(err => console.error('Error saving answer:', err));
-        }
-
-        function updatePrevNextState() {
-            prevBtn.disabled = currentIndex === 0;
-            nextBtn.disabled = currentIndex >= totalQuestions - 1;
-            prevBtn.className = 'px-6 py-2.5 rounded-lg font-medium transition-colors ' +
-                (prevBtn.disabled ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 text-gray-900 hover:bg-gray-400');
-            nextBtn.className = 'px-6 py-2.5 rounded-lg font-medium transition-colors ' +
-                (nextBtn.disabled ? 'bg-primary/60 text-white cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90');
-        }
-
-        function buildNavGrid() {
-            navGridEl.innerHTML = '';
-            for (let i = 0; i < totalQuestions; i++) {
-                const btn = document.createElement('button');
-                btn.textContent = i + 1;
-                btn.className = 'w-12 h-12 rounded-lg flex items-center justify-center text-sm font-semibold border-2 transition-all';
-                btn.addEventListener('click', () => {
-                    currentIndex = i;
-                    renderQuestion(currentIndex);
-                });
-                navGridEl.appendChild(btn);
-                updateNavBox(i);
-            }
-            updateActiveBox(0);
-        }
-
-        function updateNavBox(i) {
-            if (i >= navGridEl.children.length) return;
-
-            const btn = navGridEl.children[i];
-            const q = questions[i];
-            const isAnswered = answers[q.id] && answers[q.id].trim() !== '';
-            const isBookmarked = bookmarked[q.id] || false;
-            const isActive = i === currentIndex;
-
-            let className = 'w-12 h-12 rounded-lg flex items-center justify-center text-sm font-semibold border-2 transition-all relative';
-
-            if (isActive) {
-                className += ' bg-primary text-white border-primary shadow-md';
-            } else if (isAnswered && isBookmarked) {
-                className += ' bg-green-500 text-white border-green-600 hover:bg-green-600';
-            } else if (isAnswered) {
-                className += ' bg-green-500 text-white border-green-600 hover:bg-green-600';
-            } else if (isBookmarked) {
-                className += ' bg-yellow-100 text-yellow-900 border-yellow-400 hover:bg-yellow-200';
-            } else {
-                className += ' bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50';
-            }
-
-            btn.className = className;
-
-            if (isBookmarked && !isActive) {
-                let star = btn.querySelector('.bookmark-star');
-                if (!star) {
-                    star = document.createElement('div');
-                    star.className = 'bookmark-star absolute top-0 right-0 w-3 h-3';
-                    star.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3 text-yellow-500"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>';
-                    btn.appendChild(star);
-                }
-            } else {
-                const star = btn.querySelector('.bookmark-star');
-                if (star) {
-                    star.remove();
-                }
-            }
-        }
-
-        function updateActiveBox(i) {
-            for (let idx = 0; idx < navGridEl.children.length; idx++) {
-                updateNavBox(idx);
-            }
-        }
-
-        function updateCounts() {
-            const answered = Object.keys(answers).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
-            const unanswered = totalQuestions - answered;
-            answeredCountEl.textContent = answered;
-            unansweredCountEl.textContent = unanswered;
-            updateBookmarkedCount();
-        }
-
-        prevBtn.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                renderQuestion(currentIndex);
-            }
-        });
-
-        nextBtn.addEventListener('click', () => {
-            if (currentIndex < totalQuestions - 1) {
-                currentIndex++;
-                renderQuestion(currentIndex);
-            }
-        });
-
-        bookmarkBtn.addEventListener('click', toggleBookmark);
-
-        finishBtn.addEventListener('click', () => {
-            showFinishConfirmModal();
-        });
-
-        function showFinishConfirmModal() {
-            const answered = Object.keys(answers).filter(qId => answers[qId] && answers[qId].trim() !== '').length;
-            const unanswered = totalQuestions - answered;
-            const bookmarkedCount = Object.keys(bookmarked).filter(qId => bookmarked[qId]).length;
-
-            document.getElementById('modalTotalQuestions').textContent = totalQuestions;
-            document.getElementById('modalAnswered').textContent = answered;
-            document.getElementById('modalUnanswered').textContent = unanswered;
-            document.getElementById('modalBookmarked').textContent = bookmarkedCount;
-
-            const warningEl = document.getElementById('modalWarning');
-            if (unanswered > 0) {
-                warningEl.classList.remove('hidden');
-                warningEl.innerHTML = `<div class="flex items-center gap-2 text-yellow-600"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span class="font-medium">Masih ada ${unanswered} soal yang belum dikerjakan.</span></div>`;
-            } else {
-                warningEl.classList.add('hidden');
-            }
-
-            document.getElementById('finishConfirmModal').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('finishConfirmModal').classList.remove('opacity-0');
-                document.getElementById('finishConfirmModal').classList.add('opacity-100');
-                document.getElementById('modalContent').classList.remove('scale-95');
-                document.getElementById('modalContent').classList.add('scale-100');
-            }, 10);
-        }
-
-        function hideFinishConfirmModal() {
-            document.getElementById('finishConfirmModal').classList.add('opacity-0');
-            document.getElementById('modalContent').classList.remove('scale-100');
-            document.getElementById('modalContent').classList.add('scale-95');
-            setTimeout(() => {
-                document.getElementById('finishConfirmModal').classList.add('hidden');
-            }, 200);
-        }
-
-        function confirmFinishExam() {
-            hideFinishConfirmModal();
-            isSubmittingExam = true;
-            hasFinishedExam = true;
-            localStorage.setItem(`exam_${examId}_finished`, 'true');
+        if (sisa <= 0) {
+            clearInterval(timerInterval);
+            alert('⏰ WAKTU HABIS!');
             document.getElementById('submitForm').submit();
         }
+    }
 
-        // Timer countdown
-        const startedAt = new Date('{{ $examResult->started_at ? $examResult->started_at->toIso8601String() : now()->toIso8601String() }}');
-        const durationSeconds = durationMinutes * 60;
-        const endTime = new Date(startedAt.getTime() + (durationSeconds * 1000));
-        let timerInterval = null;
-        let hasSubmitted = false;
+    if (timerInterval) clearInterval(timerInterval);
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+}
 
-        function renderTimer() {
-            if (hasSubmitted) {
-                return;
-            }
+// ==================== RENDER SOAL ====================
+function tampilSoal(index) {
+    if (index < 0 || index >= soal.length) return;
 
-            const now = new Date();
-            const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+    const q = soal[index];
+    document.getElementById('currentNumber').textContent = index + 1;
+    document.getElementById('questionText').innerHTML = q.text;
 
-            const h = String(Math.floor(remaining / 3600)).padStart(2, '0');
-            const m = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
-            const s = String(remaining % 60).padStart(2, '0');
+    const area = document.getElementById('optionsArea');
+    area.innerHTML = '';
 
-            timerDisplay.textContent = `${h}:${m}:${s}`;
-
-            const timerBox = document.getElementById('timerBox');
-            if (remaining <= 300 && remaining > 0) {
-                timerBox.className = 'flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg shadow border-2 border-red-800 animate-pulse';
-            } else if (remaining <= 600 && remaining > 0) {
-                timerBox.className = 'flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg shadow border-2 border-orange-800';
-            } else if (remaining > 600) {
-                timerBox.className = 'flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg shadow border-2 border-red-600';
-            }
-
-            if (remaining <= 0 && !hasSubmitted) {
-                hasSubmitted = true;
-                if (timerInterval) {
-                    clearInterval(timerInterval);
+    if (q.type === 'pilihan_ganda') {
+        let opts = [];
+        if (q.options && typeof q.options === 'object') {
+            ['A', 'B', 'C', 'D'].forEach(key => {
+                if (q.options[key] && q.options[key] !== 'null') {
+                    opts.push({ key, value: String(q.options[key]) });
                 }
-
-                Object.keys(answers).forEach(questionId => {
-                    if (answers[questionId]) {
-                        saveAnswer(questionId, answers[questionId]);
-                    }
-                });
-
-                setTimeout(() => {
-                    isSubmittingExam = true;
-                    hasFinishedExam = true;
-                    document.getElementById('submitForm').submit();
-                }, 500);
-            }
+            });
+        }
+        if (opts.length === 0) {
+            opts = [
+                { key: 'A', value: 'Pilihan A' },
+                { key: 'B', value: 'Pilihan B' },
+                { key: 'C', value: 'Pilihan C' },
+                { key: 'D', value: 'Pilihan D' }
+            ];
         }
 
-        timerInterval = setInterval(renderTimer, 1000);
-        renderTimer();
+        opts.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = `option-item ${jawaban[q.id] === opt.key ? 'selected' : ''}`;
 
-        // Keyboard shortcuts (untuk testing, nonaktifkan di produksi)
-        document.addEventListener('keydown', function(e) {
-            if (e.target.tagName === 'TEXTAREA') return;
+            // Radio tersembunyi (tetap ada untuk aksesibilitas)
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = `q_${q.id}`;
+            radio.value = opt.key;
+            radio.className = 'option-radio';
+            radio.checked = jawaban[q.id] === opt.key;
 
-            // Nonaktifkan semua shortcut keyboard yang bisa digunakan untuk keluar
-            if (e.key === 'Escape' || e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
-                e.preventDefault();
-                showSecurityWarning('🚫 Shortcut keyboard dinonaktifkan!');
-                return false;
-            }
+            // Custom radio (yang terlihat)
+            const customRadio = document.createElement('span');
+            customRadio.className = 'custom-radio';
 
-            if (e.key === 'ArrowLeft' && currentIndex > 0) {
-                currentIndex--;
-                renderQuestion(currentIndex);
-            } else if (e.key === 'ArrowRight' && currentIndex < totalQuestions - 1) {
-                currentIndex++;
-                renderQuestion(currentIndex);
-            } else if ((e.key === ' ' || e.key === 'b' || e.key === 'B') && e.target.tagName !== 'BUTTON') {
-                e.preventDefault();
-                toggleBookmark();
-            }
+            const letter = document.createElement('span');
+            letter.className = 'option-letter';
+            letter.textContent = opt.key;
+
+            const text = document.createElement('span');
+            text.className = 'option-text';
+            text.textContent = opt.value;
+
+            div.appendChild(radio);
+            div.appendChild(customRadio);
+            div.appendChild(letter);
+            div.appendChild(text);
+
+            // KLIK DI MANA SAJA PADA DIV akan memilih opsi
+            div.onclick = (e) => {
+                // Cegah jika yang diklik adalah radio (tidak perlu karena radio tersembunyi)
+                e.stopPropagation();
+
+                // Update jawaban
+                jawaban[q.id] = opt.key;
+                simpanJawaban(q.id, opt.key);
+
+                // Update tampilan opsi
+                document.querySelectorAll('.option-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                div.classList.add('selected');
+
+                // Update radio yang tersembunyi
+                radio.checked = true;
+
+                // Update navigasi dan statistik
+                updateNavigasi();
+                updateStatistik();
+            };
+
+            area.appendChild(div);
         });
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.className = 'essay-area';
+        textarea.placeholder = 'Tulis jawaban Anda di sini...';
+        textarea.value = jawaban[q.id] || '';
+        textarea.oninput = () => {
+            jawaban[q.id] = textarea.value;
+            simpanJawaban(q.id, textarea.value);
+            updateNavigasi();
+            updateStatistik();
+        };
+        area.appendChild(textarea);
+    }
 
-        // Initialize
-        buildNavGrid();
-        renderQuestion(0);
-        updateCounts();
-        updateBookmarkedCount();
+    // Update bookmark button
+    const btn = document.getElementById('bookmarkBtn');
+    if (ditandai[q.id]) {
+        btn.classList.add('active');
+        btn.textContent = '⭐';
+    } else {
+        btn.classList.remove('active');
+        btn.textContent = '☆';
+    }
 
-        // Tampilkan pesan selamat datang
-        setTimeout(() => {
-            showSecurityWarning('🔒 Mode ujian aktif! Jangan keluar dari aplikasi.');
-        }, 1000);
-    </script>
+    updateNavigasiAktif();
+    updateTombolNav();
+}
+
+function toggleBookmark() {
+    const q = soal[indexSekarang];
+    if (ditandai[q.id]) delete ditandai[q.id];
+    else ditandai[q.id] = true;
+
+    localStorage.setItem(`exam_${EXAM_ID}_bookmarks`, JSON.stringify(ditandai));
+    tampilSoal(indexSekarang);
+    updateNavigasi();
+    updateStatistik();
+}
+
+function updateNavigasi() {
+    const grid = document.getElementById('navGrid');
+    for (let i = 0; i < grid.children.length; i++) {
+        const btn = grid.children[i];
+        const q = soal[i];
+        const terjawab = jawaban[q.id] && jawaban[q.id].trim() !== '';
+        const ditandaiQ = ditandai[q.id];
+
+        btn.classList.remove('answered', 'bookmarked');
+        if (terjawab) btn.classList.add('answered');
+        else if (ditandaiQ) btn.classList.add('bookmarked');
+    }
+}
+
+function updateNavigasiAktif() {
+    const grid = document.getElementById('navGrid');
+    for (let i = 0; i < grid.children.length; i++) {
+        grid.children[i].classList.remove('active');
+        if (i === indexSekarang) {
+            grid.children[i].classList.add('active');
+        }
+    }
+}
+
+function updateTombolNav() {
+    const prev = document.getElementById('prevBtn');
+    const next = document.getElementById('nextBtn');
+    prev.disabled = indexSekarang === 0;
+    next.disabled = indexSekarang >= soal.length - 1;
+}
+
+function updateStatistik() {
+    const terjawab = Object.keys(jawaban).filter(id => jawaban[id] && jawaban[id].trim() !== '').length;
+    const ditandaiCount = Object.keys(ditandai).length;
+    document.getElementById('totalQuestions').textContent = soal.length;
+    document.getElementById('answeredCount').textContent = terjawab;
+    document.getElementById('unansweredCount').textContent = soal.length - terjawab;
+    document.getElementById('bookmarkedCount').textContent = ditandaiCount;
+}
+
+function buatNavigasi() {
+    const grid = document.getElementById('navGrid');
+    grid.innerHTML = '';
+    for (let i = 0; i < soal.length; i++) {
+        const btn = document.createElement('div');
+        btn.className = 'nav-item';
+        btn.textContent = i + 1;
+        btn.onclick = () => {
+            indexSekarang = i;
+            tampilSoal(indexSekarang);
+        };
+        grid.appendChild(btn);
+    }
+    updateNavigasi();
+}
+
+// ==================== INISIALISASI ====================
+function mulaiUjian() {
+    const forceExit = localStorage.getItem(`exam_${EXAM_ID}_force_exit`);
+    if (forceExit === 'true' && !sudahSelesai) {
+        localStorage.removeItem(`exam_${EXAM_ID}_answers`);
+        localStorage.removeItem(`exam_${EXAM_ID}_bookmarks`);
+        localStorage.removeItem(`exam_${EXAM_ID}_start_time`);
+        localStorage.removeItem(`exam_${EXAM_ID}_question_order`);
+        jawaban = {};
+        ditandai = {};
+    }
+    localStorage.removeItem(`exam_${EXAM_ID}_force_exit`);
+
+    const savedOrder = localStorage.getItem(`exam_${EXAM_ID}_question_order`);
+    if (savedOrder && !forceExit) {
+        try {
+            const order = JSON.parse(savedOrder);
+            soal = [...SOAL_ASLI].sort((a,b) => order.indexOf(a.id) - order.indexOf(b.id));
+        } catch(e) {
+            soal = acakSoal();
+        }
+    } else {
+        soal = acakSoal();
+        localStorage.setItem(`exam_${EXAM_ID}_question_order`, JSON.stringify(soal.map(q => q.id)));
+    }
+
+    const savedJawaban = localStorage.getItem(`exam_${EXAM_ID}_answers`);
+    if (savedJawaban) {
+        try { Object.assign(jawaban, JSON.parse(savedJawaban)); } catch(e) {}
+    }
+
+    const savedDitandai = localStorage.getItem(`exam_${EXAM_ID}_bookmarks`);
+    if (savedDitandai) {
+        try { Object.assign(ditandai, JSON.parse(savedDitandai)); } catch(e) {}
+    }
+
+    buatNavigasi();
+    tampilSoal(0);
+    updateStatistik();
+    mulaiTimer();
+}
+
+// ==================== EVENT LISTENER ====================
+document.getElementById('startBtn').onclick = () => {
+    masukFullscreen();
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('examWrapper').style.display = 'block';
+    ujianDimulai = true;
+    mulaiUjian();
+};
+
+document.getElementById('prevBtn').onclick = () => {
+    if (indexSekarang > 0) {
+        indexSekarang--;
+        tampilSoal(indexSekarang);
+    }
+};
+
+document.getElementById('nextBtn').onclick = () => {
+    if (indexSekarang < soal.length - 1) {
+        indexSekarang++;
+        tampilSoal(indexSekarang);
+    }
+};
+
+document.getElementById('bookmarkBtn').onclick = toggleBookmark;
+
+document.getElementById('finishBtn').onclick = () => {
+    const terjawab = Object.keys(jawaban).filter(id => jawaban[id] && jawaban[id].trim() !== '').length;
+    document.getElementById('modalStats').innerHTML = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <span>✅ Terjawab</span><span style="font-weight: 700; color: #2d6a4f;">${terjawab}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span>⏳ Belum dijawab</span><span style="font-weight: 700; color: #dc2626;">${soal.length - terjawab}</span>
+        </div>
+    `;
+    document.getElementById('finishModal').style.display = 'flex';
+};
+
+document.getElementById('cancelBtn').onclick = () => {
+    document.getElementById('finishModal').style.display = 'none';
+};
+
+document.getElementById('confirmBtn').onclick = () => {
+    document.getElementById('finishModal').style.display = 'none';
+    sedangSubmit = true;
+    sudahSelesai = true;
+    localStorage.setItem(`exam_${EXAM_ID}_finished`, 'true');
+    document.getElementById('submitForm').submit();
+};
+
+// ==================== KEAMANAN ====================
+for(let i = 0; i < 50; i++) history.pushState(null, null, location.href);
+window.onpopstate = (e) => {
+    if (ujianDimulai && !sedangSubmit && !sudahSelesai) {
+        e.preventDefault();
+        toast('🚫 Tombol kembali dinonaktifkan!');
+        for(let i = 0; i < 50; i++) history.pushState(null, null, location.href);
+    }
+};
+
+let startX = 0;
+document.ontouchstart = (e) => { startX = e.touches[0].clientX; };
+document.ontouchend = (e) => {
+    if (ujianDimulai && !sedangSubmit && !sudahSelesai && startX < 50 && e.changedTouches[0].clientX > 100) {
+        e.preventDefault();
+        toast('🚫 Gesture kembali dinonaktifkan!');
+    }
+};
+
+window.onbeforeunload = (e) => {
+    if (ujianDimulai && !sedangSubmit && !sudahSelesai) {
+        e.preventDefault();
+        e.returnValue = 'Ujian sedang berlangsung!';
+    }
+};
+
+document.oncontextmenu = (e) => {
+    if (ujianDimulai && !sedangSubmit && !sudahSelesai) {
+        e.preventDefault();
+        return false;
+    }
+};
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && ujianDimulai && !sedangSubmit && !sudahSelesai) {
+        localStorage.setItem(`exam_${EXAM_ID}_force_exit`, 'true');
+        toast('⚠️ Jangan tinggalkan ujian!');
+    }
+});
+
+if (window.Android) {
+    window.Android.onBackPressed = () => {
+        if (ujianDimulai && !sedangSubmit && !sudahSelesai) {
+            toast('🚫 Tombol back dinonaktifkan!');
+            return true;
+        }
+        return false;
+    };
+}
+
+console.log('✅ Ujian siap - Klik di mana saja pada opsi untuk memilih jawaban');
+</script>
 </body>
 </html>
